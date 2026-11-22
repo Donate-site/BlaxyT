@@ -136,7 +136,7 @@ public final class AppearanceColors {
 
     /** Returns a role override only when the target's resource name is clear. */
     public static int forView(View view, int fallback) {
-        if (view == null) return fallback;
+        if (view == null || ContentArtwork.isImage(view)) return fallback;
         String name = Names.of(view);
         if (name.length() == 0 || mediaName(name)) return fallback;
 
@@ -304,7 +304,7 @@ public final class AppearanceColors {
                 }
             }
         }
-        if (!animatedDots && view instanceof ImageView) {
+        if (!animatedDots && view instanceof ImageView && !ContentArtwork.isImage(view)) {
             String imageName = resourceName(view);
             if (imageName != null && !mediaName(imageName)) {
                 String role = role(imageName, view);

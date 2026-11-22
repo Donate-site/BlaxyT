@@ -61,6 +61,7 @@ PROFILE_CONTAINER="Lcom/ss/android/ugc/profile/platform/base/component/BaseConta
 PROFILE_HEADER="Lcom/ss/android/ugc/profile/platform/business/header/base/HeaderBaseContainerComponent;"
 MESSAGE_CLASSES=("Lcom/ss/android/ugc/aweme/im/sdk/chat/messagelist/skeleton/cell/IMSkeletonLayoutReusedUISlotAssem;","Lcom/ss/android/ugc/aweme/im/sdk/chat/messagelist/skeleton/cell/SkeletonLayoutReusedUISlotAssem;")
 CONVERSATION_CLASSES={
+    "Lcom/ss/android/ugc/aweme/im/sdk/chat/ui/viewholder/template/profileitem/ProfileReusedUISlot;":"profile",
     "Lcom/ss/android/ugc/aweme/im/chatroom/input/container/BaseChatInputAssem;":"input",
     "Lcom/ss/android/ugc/aweme/im/chatroom/common/titlebar/api/BaseIMTitleBarAssem;":"header",
     "Lcom/ss/android/ugc/aweme/story/feed/immersive/dm/StoryQuickDMBottomBarAssem;":"story",
@@ -1141,7 +1142,7 @@ def rewrite_anchored(root: str) -> Dict[str, int]:
             for component,kind in CONVERSATION_CLASSES.items():
                 if component in declaration:
                     add_exit(r"(?ms)^\.method public (?:final )?onViewCreated\(Landroid/view/View;\)V.*?^\.end method",
-                             "    invoke-static/range {p1 .. p1}, Lapp/blaxyt/mod/ConversationStyle;->"+kind+"(Landroid/view/View;)V\n",
+                             ("    invoke-static/range {p0 .. p1}, Lapp/blaxyt/mod/ConversationStyle;->profile(Ljava/lang/Object;Landroid/view/View;)V\n" if kind=="profile" else "    invoke-static/range {p1 .. p1}, Lapp/blaxyt/mod/ConversationStyle;->"+kind+"(Landroid/view/View;)V\n"),
                              "blaxyt conversation surfaces")
             if "Lcom/ss/android/ugc/aweme/feed/assem/share/VideoShareAssem;" in declaration:
                 def capture_share(match):

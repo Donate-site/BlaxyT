@@ -672,7 +672,7 @@ public final class Accent {
             paintSpans(text);
             accentReply(text);
         }
-        if (view instanceof ImageView) {
+        if (view instanceof ImageView && !ContentArtwork.isImage(view)) {
             ImageView image = (ImageView) view;
             ColorStateList tint=image.getImageTintList(), newTint=repaintedColours(tint);
             if (newTint!=tint) image.setImageTintList(newTint);
@@ -978,6 +978,7 @@ public final class Accent {
 
     public static void setImageTintList(ImageView view, ColorStateList colours) {
         if (view == null) return;
+        if (ContentArtwork.isImage(view)) {view.setImageTintList(colours);return;}
         if (LikeColors.isLikeView(view))
             AppearanceColors.rememberImageTint(view, colours);
         ColorStateList mapped = moved(colours);
@@ -1788,6 +1789,7 @@ public final class Accent {
 
     private static void paintColorFilter(ImageView view, int colour, PorterDuff.Mode mode) {
         if (view == null) return;
+        if (ContentArtwork.isImage(view)) {if(mode==null)view.setColorFilter(colour);else view.setColorFilter(colour,mode);return;}
         int mapped = LikeColors.forView(view, colour, swap(colour));
         int chosen = AppearanceColors.forView(view, mapped);
         if (mode == null) view.setColorFilter(chosen);
