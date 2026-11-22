@@ -311,6 +311,13 @@ class Build:
         elif arsc.dirty:
             apk.replace("resources.arsc", arsc.build(), STORED)
 
+        if not self.lite:
+            from . import native_speed
+            if not apk.has(native_speed.LIBRARY):
+                raise RuntimeError("Expected ARM64 native player is missing")
+            apk.replace(native_speed.LIBRARY, native_speed.patch(apk.read(native_speed.LIBRARY)))
+            self.detail("verified native playback limit: 3x -> 5x (one ARM64 instruction)")
+
         self.say("Rewriting the bytecode")
         self.patch_dex_files(apk, api, renames)
 

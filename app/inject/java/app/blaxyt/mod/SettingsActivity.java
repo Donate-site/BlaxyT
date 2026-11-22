@@ -778,7 +778,6 @@ public class SettingsActivity extends Activity {
         ambient.addView(liveToggleRow("palette", "Ambient — фон по цветам видео", Ambient.enabled(), Ambient::set));
         ambient.addView(quiet("Цвета текущего кадра плавно переходят в фон вокруг ролика. Особенно заметно у горизонтальных видео. Видео и кнопки остаются чёткими."));
         ambient.addView(line());
-        ambient.addView(liveToggleRow("chat_bubble", "Новые чаты и истории", ConversationStyle.enabled(), ConversationStyle::set));
         ambient.addView(quiet("Фиолетовые карточки профиля, скруглённое поле сообщения и мягкие кнопки ответа в истории."));
         column.addView(wrap(ambient));
 
