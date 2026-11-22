@@ -849,7 +849,7 @@ final class NavBar {
                 }
                 if (moving) {
                     View host = glassHost.get();
-                    if (host != null) host.postInvalidateOnAnimation();
+                    if (host != null) Performance.redraw(host);
                 }
                 if (veil >= 0) canvas.restoreToCount(veil);
                 return;

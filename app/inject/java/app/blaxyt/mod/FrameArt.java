@@ -56,7 +56,7 @@ final class FrameArt {
             canvas.restoreToCount(saved);
         }
         // One redraw on the next display frame; no persistent timer for hidden/recycled avatars.
-        if(host.isAttachedToWindow()&&host.isShown()&&host.hasWindowFocus())host.postInvalidateOnAnimation();
+        if(host.isAttachedToWindow()&&host.isShown()&&host.hasWindowFocus())Performance.redraw(host);
         return true;
     }
     private FrameArt(){}

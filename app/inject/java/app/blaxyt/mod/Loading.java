@@ -95,7 +95,7 @@ public final class Loading {
             else shape(canvas, width, height);
             // TikTok asks for its next frame some milliseconds on; a shape
             // that turns wants every one
-            if (view.isShown()) view.postInvalidateOnAnimation();
+            if (view.isShown()) Performance.redraw(view);
             return true;
         } catch (Throwable error) {
             if (!complained) {

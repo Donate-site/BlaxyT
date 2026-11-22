@@ -66,7 +66,12 @@ final class CommentLinks {
             CharSequence now = view.getText();
             if (now != null && looksLikeIt(now)) view.setText(now);
         }
+        // Native recycled cells can replace their listener while binding a new item.
+        view.setOnTouchListener(CommentLinks::touched);
         CharSequence text = view.getText();
+        if(text!=null && !(text instanceof Spannable) && text.toString().contains("[blaxy-voice:")){
+            view.setText(text,TextView.BufferType.SPANNABLE);text=view.getText();
+        }
         if (text instanceof Spannable) mark(view,(Spannable) text);
     }
 

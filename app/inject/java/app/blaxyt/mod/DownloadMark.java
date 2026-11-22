@@ -60,7 +60,7 @@ final class DownloadMark extends android.widget.LinearLayout {
         paint.setStyle(android.graphics.Paint.Style.STROKE);paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);paint.setStrokeJoin(android.graphics.Paint.Join.ROUND);paint.setStrokeWidth(4*density);
         float trackStart=Math.min(right,end+8*density);
         if(trackStart<right && t<0.2f){stroke.reset();stroke.moveTo(cx+trackStart,cy+base);stroke.lineTo(cx+right,cy+base);int alpha=Math.round(51*Math.max(0,1-t/0.2f));paint.setColor((Accent.colour()&0xFFFFFF)|(alpha<<24));canvas.drawPath(stroke,paint);}
-        if(p<=0 && !completing){if(moving && isAttachedToWindow() && isShown())postInvalidateOnAnimation();return;}
+        if(p<=0 && !completing){if(moving && isAttachedToWindow() && isShown())Performance.redraw(this);return;}
         stroke.reset();for(int i=0;i<=128;i++){
             float u=i/128f,sourceX=DownloadMorph.mix(left,end,u),sourceY=base+DownloadWave.offset(sourceX-left,density,clock,amp)*(1-t)*(1-t);
             float x=cx+DownloadMorph.mix(sourceX,DownloadWave.checkX(u)*density,t),y=cy+DownloadMorph.mix(sourceY,DownloadWave.checkY(u)*density,t);
@@ -68,6 +68,6 @@ final class DownloadMark extends android.widget.LinearLayout {
         }
         paint.setStyle(android.graphics.Paint.Style.STROKE);paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);paint.setStrokeJoin(android.graphics.Paint.Join.ROUND);
         paint.setStrokeWidth(DownloadMorph.mix(4*density,2.5f*density,t));paint.setColor(DownloadMorph.colour(Accent.colour(),contrast,t));canvas.drawPath(stroke,paint);
-        if(!completing && moving && isAttachedToWindow() && isShown())postInvalidateOnAnimation();
+        if(!completing && moving && isAttachedToWindow() && isShown())Performance.redraw(this);
     }
 }

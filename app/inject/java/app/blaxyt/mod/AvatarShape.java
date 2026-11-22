@@ -203,7 +203,7 @@ public final class AvatarShape {
     private static final WeakHashMap<Path, float[]> SHAPED = new WeakHashMap<>();
 
     static boolean spins() {
-        if(BlaxyExtensions.active(ExtensionPolicy.LIGHT))return false;
+        if(Performance.light()||BlaxyExtensions.active(ExtensionPolicy.LIGHT))return false;
         int known = spin;
         if (known < 0) {
             Context context = BlaxyRuntime.context();

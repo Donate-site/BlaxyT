@@ -31,12 +31,17 @@ final class AppUpdates {
     private static boolean checking,verifying,awaitingPermission,sessionAsked;
     private static volatile boolean downloading,cancel;
     private static volatile int percent;
-    private static long checkedAt;private static int offered;
+    private static long checkedAt;private static int offered,checkGeneration;
     private static SharedPreferences prefs(Context c){return c.getSharedPreferences("blaxyt_updates",0);}
     static boolean enabled(Context c){return prefs(c).getBoolean("enabled",false);}
     static void setEnabled(Context c,boolean on){prefs(c).edit().putBoolean("asked",true).putBoolean("enabled",on).apply();}
     private static boolean home(Activity a){return a instanceof SettingsActivity||a.getClass().getName().equals("com.ss.android.ugc.aweme.main.MainActivity");}
-    private static boolean visible(Activity a){return a!=null&&front.get()==a&&!a.isFinishing()&&!a.isDestroyed()&&a.getWindow().getDecorView().hasWindowFocus();}
+    private static boolean visible(Activity a){
+        if(a==null||front.get()!=a||a.isFinishing()||a.isDestroyed())return false;
+        Panel own=shown.get();
+        return a.getWindow().getDecorView().hasWindowFocus()
+            ||(panelOwner.get()==a&&own!=null&&own.dialog().isShowing());
+    }
     static void resumed(Activity activity){
         front=new WeakReference<>(activity);
         WeakReference<Activity> target=new WeakReference<>(activity);
@@ -80,7 +85,16 @@ final class AppUpdates {
         UpdateSpec ready=pending(activity);if(ready!=null){if(manual||offered!=ready.code)offer(activity,ready,true);return;}
         long now=android.os.SystemClock.elapsedRealtime();if(!manual&&checkedAt!=0&&now-checkedAt<900000)return;
         checking=true;checkedAt=now;Context app=activity.getApplicationContext();WeakReference<Activity> requester=new WeakReference<>(activity);
-        if(manual)Screen.say("Проверяем обновления…");
+        final int generation=++checkGeneration;
+        final Panel waiting=manual?Panel.with(activity,Skin.remembered(activity),"Проверка обновлений"):null;
+        if(waiting!=null){waiting.text("Проверяем новую версию BlaxyT…").quiet("Скрыть",()->{});present(activity,waiting);}
+        UI.postDelayed(()->{
+            if(!checking||generation!=checkGeneration)return;
+            checking=false;checkGeneration++;checkedAt=0;
+            Activity a=requester.get();boolean foreground=visible(a);
+            if(waiting!=null)waiting.close();
+            if(manual&&foreground)Screen.say("Сервер обновлений не ответил вовремя. Повторите проверку.");
+        },35000);
         Net.away("blaxyt-update-check",()->{
             UpdateSpec found=null;String error=null;
             try{
@@ -92,9 +106,14 @@ final class AppUpdates {
                     UpdateSpec s=new UpdateSpec(bytes.toString("UTF-8"));
                     if(s.newer(installed(app).versionCode,app.getPackageName(),Build.VERSION.SDK_INT,Build.SUPPORTED_ABIS))found=s;
                 }finally{c.disconnect();}
-            }catch(Exception e){error="Не удалось проверить обновления. Попробуйте позже.";}
+            }catch(Throwable e){Diary.note("update check: "+e.getClass().getSimpleName());error="Не удалось проверить обновления. Попробуйте позже.";}
             final UpdateSpec next=found;final String issue=error;
-            UI.post(()->{checking=false;Activity a=requester.get();if(!visible(a))return;
+            UI.post(()->{
+                if(generation!=checkGeneration)return;
+                checking=false;Activity a=requester.get();boolean foreground=visible(a);
+                if(waiting!=null)waiting.close();
+                if(issue!=null)checkedAt=0;
+                if(!foreground)return;
                 if(next!=null&&(manual||(enabled(a)&&offered!=next.code&&prefs(a).getLong("later_until",0)<System.currentTimeMillis())))offer(a,next,false);
                 else if(manual)Screen.say(issue==null?"Установлена актуальная версия BlaxyT.":issue);
             });

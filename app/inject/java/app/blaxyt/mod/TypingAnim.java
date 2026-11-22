@@ -237,7 +237,7 @@ public final class TypingAnim {
         }
         boolean glide = on(ON) && on(CURSOR);
         if (glide != (edit.getTag(TAG_CARET) != null)) caret(edit, glide);
-        edit.postInvalidateOnAnimation();
+        Performance.redraw(edit);
     }
 
     private static void caret(EditText edit, boolean hide) {
@@ -317,7 +317,7 @@ public final class TypingAnim {
                 while (layer.pops.size() > 48) layer.finish(layer.pops.get(0));
             } catch (Throwable ignored) {
             }
-            view.postInvalidateOnAnimation();
+            Performance.redraw(view);
         }
     }
 
@@ -366,7 +366,7 @@ public final class TypingAnim {
             float width = view.getPaint().measureText(text);
             gone.add(new Gone(text, gx + width / 2f, gy, view.getTextSize()));
             if (gone.size() > 40) gone.remove(0);
-            view.postInvalidateOnAnimation();
+            Performance.redraw(view);
         }
 
         private void dress() {
@@ -426,7 +426,7 @@ public final class TypingAnim {
             } else {
                 placed = false;
             }
-            if (again) view.postInvalidateOnAnimation();
+            if (again) Performance.redraw(view);
         }
 
         /** Draws the gliding cursor; true while it is still on its way.

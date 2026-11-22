@@ -932,7 +932,7 @@ final class KyksikRun {
                 box.set(dirty);
                 box.union(lastDirty);
                 lastDirty.set(dirty);
-                if(BlaxyExtensions.active(ExtensionPolicy.PETS))postInvalidateDelayed(33L,box.left,box.top,box.right,box.bottom);
+                if(Performance.light()||BlaxyExtensions.active(ExtensionPolicy.PETS))postInvalidateDelayed(33L,box.left,box.top,box.right,box.bottom);
                 else postInvalidateOnAnimation(box.left, box.top, box.right, box.bottom);
             }
         }

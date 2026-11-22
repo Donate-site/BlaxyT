@@ -255,7 +255,7 @@ public final class VoiceComments {
                         if(value==null){status.setText(error);return;}
                         String key=value.optString("id");
                         // Keep the transport within older TikTok comment limits as well.
-                        String text="Голосовое BlaxyT. Слушать в моде: ТГК @BlaxyT [blaxy-voice:"+key+"]";
+                        String text="Голосовое BlaxyT. "+clock(value.optInt("duration"))+" · Слушать: ТГК @BlaxyT [blaxy-voice:"+key+"]";
                         if(!target()||!key.matches("[a-f0-9]{32}")||!text.contains("[blaxy-voice:"+key+"]")){
                             status.setText("Поле комментария изменилось. Запись не вставлена. Её можно удалить в «Мои голосовые».");return;
                         }
@@ -282,7 +282,7 @@ public final class VoiceComments {
         }
         if(button instanceof View){View view=(View)button;
             if(view.isAttachedToWindow()&&view.isShown()&&view.isEnabled()&&view.hasOnClickListeners()){
-                try{if(view.performClick()){Screen.say("Отправляю: пользователи BlaxyT увидят голосовое, остальные — поясняющий текст.");return;}}catch(Throwable ignored){}
+                try{if(view.performClick())return;}catch(Throwable ignored){}
             }
         }
         Screen.say("Запись готова в поле комментария. Нажмите кнопку отправки TikTok.");
@@ -298,7 +298,8 @@ public final class VoiceComments {
         view.setTag(BOUND,valid(author)&&valid(aid)&&MARK.matcher(body).find()?new Bound(author,aid,body):null);
         if(listening!=null&&listening.host.get()==view&&!listening.visible())listening.close();
     }
-    private static final class Bound{final String author,video,body;Bound(String a,String v,String b){author=a;video=v;body=b;}}
+    private static final class Bound{final String author,video,body,duration;Bound(String a,String v,String b){author=a;video=v;body=b;
+        Matcher m=Pattern.compile("^Голосовое BlaxyT\\. ([0-9]:[0-5][0-9]) ·").matcher(b);duration=m.find()?m.group(1):"";}}
     static void mark(TextView view,Spannable text){
         for(VoiceTap old:text.getSpans(0,text.length(),VoiceTap.class))text.removeSpan(old);
         for(VoiceLabel old:text.getSpans(0,text.length(),VoiceLabel.class))text.removeSpan(old);
@@ -307,7 +308,7 @@ public final class VoiceComments {
         String key=found.group(1);int start=found.start(),end=found.end();
         // Hide only our own explanatory payload, never arbitrary surrounding comment text.
         if((text.toString().startsWith("Это голосовое сообщение из BlaxyT.")||text.toString().startsWith("Голосовое BlaxyT."))&&end==text.length())start=0;
-        text.setSpan(new VoiceLabel(key),start,end,Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        text.setSpan(new VoiceLabel(key,b.duration),start,end,Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         text.setSpan(new VoiceTap(key,b),start,end,Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
     static final class VoiceTap extends ClickableSpan{
@@ -321,38 +322,50 @@ public final class VoiceComments {
         public void updateDrawState(TextPaint p){p.setColor(Accent.colour());p.setUnderlineText(false);}
     }
     private static final class VoiceLabel extends ReplacementSpan{
-        final String key;VoiceLabel(String id){key=id;}
-        public int getSize(Paint p,CharSequence t,int start,int end,Paint.FontMetricsInt fm){if(fm!=null){p.getFontMetricsInt(fm);fm.descent+=Math.round(p.getTextSize()*.35f);fm.bottom=Math.max(fm.bottom,fm.descent);}return (int)Math.ceil(p.measureText("▶  Голосовое · 00:00 / 01:00"));}
+        final String key,duration;final Paint ink=new Paint(Paint.ANTI_ALIAS_FLAG);
+        final android.graphics.RectF box=new android.graphics.RectF();final android.graphics.Path triangle=new android.graphics.Path();
+        VoiceLabel(String id,String length){key=id;duration=length;}
+        public int getSize(Paint p,CharSequence t,int start,int end,Paint.FontMetricsInt fm){
+            if(fm!=null){p.getFontMetricsInt(fm);fm.ascent=Math.min(fm.ascent,-Math.round(p.getTextSize()*1.9f));fm.top=fm.ascent;fm.descent=Math.max(fm.descent,Math.round(p.getTextSize()*.7f));fm.bottom=fm.descent;}
+            return Math.round(p.getTextSize()*13f);
+        }
         public void draw(Canvas c,CharSequence t,int start,int end,float x,int top,int y,int bottom,Paint p){
-            int old=p.getColor();p.setColor(Accent.colour());Listening current=listening;String label="▶  Голосовое BlaxyT";float progress=0;
+            float unit=p.getTextSize(),width=unit*13f,cy=y-unit*.5f;
+            Listening current=listening;String label=duration.isEmpty()?"Голосовое":duration;float progress=0;boolean playing=false;
             if(current!=null&&current.key.equals(key)){
-                if(current.loading)label="◌  Загружаю голосовое…";
-                else if(current.ready&&current.player!=null){try{int position=current.player.getCurrentPosition(),duration=current.player.getDuration();label=(current.player.isPlaying()?"Ⅱ  ":"▶  ")+clock(position)+" / "+clock(duration);progress=duration>0?Math.min(1f,position/(float)duration):0;}catch(Exception ignored){}}
+                if(current.loading)label="Загрузка…";
+                else if(current.ready&&current.player!=null){try{int position=current.player.getCurrentPosition(),length=current.player.getDuration();label=clock(position)+" / "+clock(length);progress=length>0?Math.min(1f,position/(float)length):0;playing=current.player.isPlaying();}catch(Exception ignored){}}
             }
-            c.drawText(label,x,y,p);float width=p.measureText("▶  Голосовое · 00:00 / 01:00"),line=y+p.getTextSize()*.25f;
-            p.setAlpha(55);c.drawRect(x,line,x+width,line+2,p);p.setColor(Accent.colour());c.drawRect(x,line,x+width*progress,line+2,p);p.setColor(old);
+            ink.setColor(Accent.colour());ink.setAlpha(30);box.set(x,cy-unit*1.25f,x+width,cy+unit*1.1f);c.drawRoundRect(box,unit,unit,ink);
+            ink.setAlpha(255);float cx=x+unit*1.35f;
+            if(playing){c.drawRect(cx-unit*.3f,cy-unit*.45f,cx-unit*.08f,cy+unit*.45f,ink);c.drawRect(cx+unit*.08f,cy-unit*.45f,cx+unit*.3f,cy+unit*.45f,ink);}
+            else{triangle.reset();triangle.moveTo(cx-unit*.25f,cy-unit*.5f);triangle.lineTo(cx+unit*.5f,cy);triangle.lineTo(cx-unit*.25f,cy+unit*.5f);triangle.close();c.drawPath(triangle,ink);}
+            ink.setTextSize(unit*.9f);ink.setTypeface(p.getTypeface());c.drawText(label,x+unit*2.6f,cy+unit*.15f,ink);
+            float left=x+unit*2.6f,right=x+width-unit,yline=cy+unit*.65f;
+            ink.setAlpha(60);box.set(left,yline,right,yline+unit*.13f);c.drawRoundRect(box,unit*.1f,unit*.1f,ink);
+            ink.setAlpha(255);box.right=left+(right-left)*progress;c.drawRoundRect(box,unit*.1f,unit*.1f,ink);
         }
     }
     private static String clock(int ms){int seconds=Math.max(0,ms/1000);return (seconds/60)+":"+(seconds%60<10?"0":"")+(seconds%60);}
     private static final class Listening{
         final Activity activity;final String key,uid;final Bound bound;final Panel panel;final TextView state,play;boolean closed,loading,ready;File audio;MediaPlayer player;
         final AudioManager sound;final AudioManager.OnAudioFocusChangeListener focus;
-        final WeakReference<TextView> host;final boolean inline;
+        final WeakReference<TextView> host;final boolean inline;final android.graphics.Rect visibleArea=new android.graphics.Rect();
         final View.OnAttachStateChangeListener attachment=new View.OnAttachStateChangeListener(){public void onViewAttachedToWindow(View v){}public void onViewDetachedFromWindow(View v){close();}};
-        final Runnable progress=new Runnable(){public void run(){if(closed)return;if(!live(uid)||(inline&&!visible())){close();return;}redraw();if(ready&&player!=null){try{if(player.isPlaying())MAIN.postDelayed(this,250);}catch(Exception ignored){}}}};
+        final Runnable progress=new Runnable(){public void run(){if(closed)return;if(!live(uid)||(inline&&!visible())){close();return;}redraw();if(ready&&player!=null){try{if(player.isPlaying())MAIN.postDelayed(this,Performance.light()?400:250);}catch(Exception ignored){}}}};
         Listening(Activity a,String id,Bound b){this(a,id,b,null);}
         Listening(Activity a,String id,Bound b,TextView row){
             host=new WeakReference<TextView>(row);inline=row!=null;
             if(row!=null)row.addOnAttachStateChangeListener(attachment);
-            activity=a;key=id;bound=b;uid=Account.liveId();Skin skin=Skin.forSettings(a);panel=Panel.with(a,skin,"Голосовое BlaxyT");
-            state=new TextView(a);state.setTextColor(skin.text);state.setTextSize(17);state.setPadding(12,16,12,16);state.setText("Нажмите, чтобы загрузить и прослушать.");panel.view(state);
-            play=panel.action("Прослушать",true);play.setOnClickListener(v->play());
-            if(uid.equals(b.author))panel.quiet("Удалить запись с сервера",()->remove(activity,key));panel.quiet("Закрыть",null);
+            activity=a;key=id;bound=b;uid=Account.liveId();Skin skin=Skin.forSettings(a);panel=inline?null:Panel.with(a,skin,"Голосовое BlaxyT");
+            state=new TextView(a);state.setTextColor(skin.text);state.setTextSize(17);state.setPadding(12,16,12,16);state.setText("Нажмите, чтобы загрузить и прослушать.");if(panel!=null)panel.view(state);
+            play=inline?new TextView(a):panel.action("Прослушать",true);play.setText("Прослушать");play.setOnClickListener(v->play());
+            if(panel!=null&&uid.equals(b.author))panel.quiet("Удалить запись с сервера",()->remove(activity,key));if(panel!=null)panel.quiet("Закрыть",null);
             sound=(AudioManager)a.getSystemService(Context.AUDIO_SERVICE);focus=change->{if(change<0)MAIN.post(()->{if(player!=null&&ready){try{player.pause();play.setText("Продолжить");MAIN.removeCallbacks(progress);redraw();}catch(Exception ignored){}}});};
-            panel.dialog().setOnDismissListener(d->dispose());
+            if(panel!=null)panel.dialog().setOnDismissListener(d->dispose());
         }
-        void show(){panel.show();}
-        boolean visible(){TextView view=host.get();if(view==null||!view.isAttachedToWindow())return false;Object tag=view.getTag(BOUND);if(!(tag instanceof Bound))return false;Bound b=(Bound)tag;return bound.author.equals(b.author)&&bound.video.equals(b.video)&&b.body.contains("[blaxy-voice:"+key+"]");}
+        void show(){if(panel!=null)panel.show();}
+        boolean visible(){TextView view=host.get();if(view==null||!view.isAttachedToWindow()||!view.isShown()||!view.getGlobalVisibleRect(visibleArea))return false;Object tag=view.getTag(BOUND);if(!(tag instanceof Bound))return false;Bound b=(Bound)tag;return bound.author.equals(b.author)&&bound.video.equals(b.video)&&b.body.contains("[blaxy-voice:"+key+"]");}
         void redraw(){TextView view=host.get();if(view!=null&&visible()){view.invalidate();view.setContentDescription(loading?"Голосовое загружается":play.getText()+" голосовое BlaxyT");}}
         void error(String message){state.setText(message);redraw();if(inline)Screen.say(message);}
         void play(){
@@ -385,7 +398,7 @@ public final class VoiceComments {
             }catch(Exception e){release();error("Не удалось открыть запись.");}
         }
         void release(){MAIN.removeCallbacks(progress);if(player!=null){try{player.release();}catch(Exception ignored){}player=null;}ready=false;loading=false;play.setEnabled(true);play.setText("Прослушать");if(audio!=null){audio.delete();audio=null;}if(sound!=null)sound.abandonAudioFocus(focus);}
-        void close(){panel.close();dispose();}
+        void close(){if(panel!=null)panel.close();dispose();}
         void dispose(){if(closed)return;closed=true;TextView row=host.get();if(row!=null)row.removeOnAttachStateChangeListener(attachment);release();if(listening==this)listening=null;redraw();}
     }
     static void mine(Activity a){

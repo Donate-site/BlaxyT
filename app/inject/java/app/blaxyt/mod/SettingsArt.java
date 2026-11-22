@@ -740,7 +740,7 @@ final class SettingsArt {
             matrix.postTranslate(cx, cy);
             if (AvatarShape.spins() && index > 0) {
                 matrix.postRotate(AvatarShape.angle(), cx, cy);
-                postInvalidateOnAnimation();
+                Performance.redraw(this);
             }
             clip.reset();
             AvatarShape.unit(index).transform(matrix, clip);
@@ -949,7 +949,7 @@ final class SettingsArt {
             text.setColor(Expressive.mix(skin.muted(), skin.text, t));
             canvas.drawText("blaxyT", rx, cy + 46 * d, text);
             // only while it can be seen: scrolled back into sight, it is drawn and starts again
-            if (isShown() && getGlobalVisibleRect(seen)) postInvalidateOnAnimation();
+            if (isShown() && getGlobalVisibleRect(seen)) Performance.redraw(this);
         }
 
         private final android.graphics.Rect seen = new android.graphics.Rect();

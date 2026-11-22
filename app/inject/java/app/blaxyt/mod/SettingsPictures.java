@@ -60,7 +60,7 @@ final class SettingsPictures {
          */
         void again() {
             if (!isAttachedToWindow()) return;
-            if (isShown() && getGlobalVisibleRect(seen)) postInvalidateOnAnimation();
+            if (isShown() && getGlobalVisibleRect(seen)) Performance.redraw(this);
             else { removeCallbacks(lookAgain); postDelayed(lookAgain, 250); }
         }
 

@@ -1286,14 +1286,14 @@ def rewrite_anchored(root: str) -> Dict[str, int]:
                     if hits:counts["blaxyt voice microphone"]=counts.get("blaxyt voice microphone",0)+hits
                     return body
                 text=re.sub(r"(?ms)^\.method public final Sp\(\)V.*?^\.end method",voice_entry,text)
-            if "Lcom/ss/android/ugc/aweme/commentv2/commentlist/powercell/BaseCommentCell;" in text.split("\n",1)[0]:
+            if any("Lcom/ss/android/ugc/aweme/commentv2/commentlist/powercell/"+cell+";" in text.split("\n",1)[0] for cell in ("BaseCommentCell", "CommentItemCell", "CommentSecondaryItemCell", "NoPermissionVideoCommentItemCell")):
                 def bind_comment_body(match):
                     body=match.group(0)
                     if "Comments;->bindCell" in body:return body
                     body,hits=re.subn(r"(?m)^([ \t]*return-void)","    invoke-static/range {p0 .. p0}, "+COMMENTS+"->bindCell(Ljava/lang/Object;)V\n"+r"\1",body)
                     if hits:counts["native comment body actions"]=counts.get("native comment body actions",0)+hits
                     return body
-                text=re.sub(r"(?ms)^\.method public bridge synthetic onBindItemView\([^\n]*\n.*?^\.end method",bind_comment_body,text)
+                text=re.sub(r"(?ms)^\.method public (?:final )?bridge synthetic onBindItemView\([^\n]*\n.*?^\.end method",bind_comment_body,text)
                 def native_comment_actions(match):
                     method=match.group(0)
                     if "CommentActionMenuVM;->h43" not in method or "Comments;->openNativeActions" in method:return method
@@ -1546,6 +1546,11 @@ for anchor in ("LX/0TFu;", "LX/0TVv;"):
     ANCHORED_SOURCES.append((anchor, "Landroid/content/Context;", "getString",
         "(I)Ljava/lang/String;", "(Landroid/content/Context;I)Ljava/lang/String;", SAFELY))
     CLASS_ANCHORED_SOURCES.add(anchor)
+
+# Only the native hold-speed widget asks for these localized captions.
+ANCHORED_SOURCES.append(("LX/0HY2;", "Landroid/content/Context;", "getString",
+    "(I)Ljava/lang/String;", "(Landroid/content/Context;I)Ljava/lang/String;", "Lapp/blaxyt/mod/SpeedGesture;"))
+CLASS_ANCHORED_SOURCES.add("LX/0HY2;")
 
 # Every screen of TikTok's starts another through this one class, which is
 # androidx and has kept its name. The start is shown to the mod first: with
@@ -1861,12 +1866,14 @@ def carries_an_anchor(dex: bytes) -> bool:
             or any(owner.encode() in dex for owner in (REPOST_CLASS,AVATAR_CLASS,PROFILE_CONTAINER,PROFILE_HEADER,PUSH_GUIDE)+MESSAGE_CLASSES)
             or SPEED_TOUCH_CLASS.encode() in dex or SPEED_EDGE_CLASS.encode() in dex or SPEED_START_CLASS.encode() in dex
             or PLAYER_SETTINGS.encode() in dex
-            or defines(dex, PLAYER_VIEW_CONFIG) or defines(dex, SPEED_ENGINE_CLASS)
+            or defines(dex, PLAYER_VIEW_CONFIG) or defines(dex, SPEED_ENGINE_CLASS) or defines(dex, SPEED_LIST_CLASS)
+            or defines(dex, "LX/0pm6;") or defines(dex, "LX/0H9q;")
             or any(defines(dex,owner) for owner in CONVERSATION_CLASSES))
 
 
 SPEED_START_CLASS = "Lcom/ss/android/ugc/aweme/feed/longvideo/edgespeedup/EdgeSpeedupAssem;"
 SPEED_ENGINE_CLASS = "Lcom/ss/ttm/player/TTPlayerClient;"
+SPEED_LIST_CLASS = "LX/09qI;"
 
 def rewrite_hold_start(root: str) -> Dict[str, int]:
     """Replace only the native hold-start rate. Native release/cancel restores its saved rate."""
@@ -1877,6 +1884,43 @@ def rewrite_hold_start(root: str) -> Dict[str, int]:
             if not name.endswith(".smali"): continue
             path = os.path.join(directory, name)
             with open(path, encoding="utf-8") as handle: text = handle.read()
+            if 'LX/0pm6;' in text.split('\n',1)[0]:
+                pattern=r'(?ms)^\.method public final LJIIIZ\(LX/0pnN;\)LX/0pmS;.*?^\.end method'
+                match=re.search(pattern,text)
+                if match is None:raise RuntimeError('Playback menu factory changed')
+                method=match.group()
+                # The compact native row is hard-coded to four cells. Use TikTok's
+                # existing scrolling list, which gets all seven speeds from 09qI.
+                if '# blaxyt full speed menu' not in method:
+                    method,hits=re.subn(r'(invoke-static \{\}, LX/09RM;->LIZ\(\)I(?:\s*\.line \d+)*\s*move-result v2)',r'\1\n    const/4 v2, 0x0 # blaxyt full speed menu',method)
+                    if hits!=1:raise RuntimeError('Playback menu selection changed')
+                    with open(path,'w',encoding='utf-8') as handle:handle.write(text[:match.start()]+method+text[match.end():])
+                counts['blaxyt full speed menu']=1
+                continue
+            if 'LX/0H9q;' in text.split('\n',1)[0]:
+                pattern=r'(?ms)^\.method public final LIZJ\(\)V.*?^\.end method'
+                match=re.search(pattern,text)
+                if match is None:raise RuntimeError('Legacy hold caption show method changed')
+                method=match.group()
+                if 'SpeedGesture;->caption' not in method:
+                    method,hits=re.subn(r'(?m)^(    \.registers \d+)$',r'\1\n    invoke-static {p0}, Lapp/blaxyt/mod/SpeedGesture;->caption(Landroid/view/View;)V',method,count=1)
+                    if hits!=1:raise RuntimeError('Legacy hold caption register declaration changed')
+                    with open(path,'w',encoding='utf-8') as handle:handle.write(text[:match.start()]+method+text[match.end():])
+                counts['blaxyt legacy hold caption']=1
+                continue
+            if SPEED_LIST_CLASS in text.split("\n", 1)[0]:
+                pattern = r"(?ms)^\.method public static LIZ\(\)Ljava/util/List;.*?^\.end method"
+                match = re.search(pattern, text)
+                if match is None: raise RuntimeError('Native playback speed list changed')
+                method = match.group()
+                if 'PlaybackSpeeds;->extend' not in method:
+                    method, hits = re.subn(r'(?m)^    return-object (v\d+)$', lambda m:
+                        '    invoke-static {'+m[1]+'}, Lapp/blaxyt/mod/PlaybackSpeeds;->extend(Ljava/util/List;)Ljava/util/List;\n'
+                        '    move-result-object '+m[1]+'\n'+m[0], method)
+                    if hits != 2: raise RuntimeError('Native playback speed list returns changed')
+                    with open(path,'w',encoding='utf-8') as handle: handle.write(text[:match.start()]+method+text[match.end():])
+                counts['blaxyt native speed choices'] = 2
+                continue
             if SPEED_ENGINE_CLASS in text.split("\n", 1)[0]:
                 start=text.find('.method public final LJIL(LX/0qBO;)V\n')
                 if start<0:raise RuntimeError('Native engine speed method changed')

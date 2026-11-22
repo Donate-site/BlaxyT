@@ -28,7 +28,7 @@ public final class MotionBlur {
     private static Boolean enabled;
     private static int amount=-1;
     static boolean on() {
-        if(Build.VERSION.SDK_INT<31||BlaxyExtensions.active(ExtensionPolicy.LIGHT))return false;
+        if(Build.VERSION.SDK_INT<31||Performance.light()||BlaxyExtensions.active(ExtensionPolicy.LIGHT))return false;
         if(enabled==null){Context c=BlaxyRuntime.context();if(c==null)return false;
             enabled=c.getSharedPreferences(BlaxyRuntime.PREFS,0).getBoolean(KEY,false);}
         return enabled;

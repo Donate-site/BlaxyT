@@ -76,7 +76,7 @@ final class Ambient {
         void sample(int nextGeneration){
             if(generation!=nextGeneration){generation=nextGeneration;sampled=-1000;}
             View v=video.get();long now=SystemClock.uptimeMillis();
-            if(!valid(generation)||copying||pending||now-sampled<450||!GlassVideo.playing()||!GlassVideo.frameReady(v))return;
+            if(!valid(generation)||copying||pending||now-sampled<Performance.ambientInterval()||!GlassVideo.playing()||!GlassVideo.frameReady(v))return;
             sampled=now;int ticket=generation;
             try{
                 if(sample==null)sample=Bitmap.createBitmap(24,24,Bitmap.Config.ARGB_8888);

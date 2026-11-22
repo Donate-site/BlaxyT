@@ -335,7 +335,7 @@ public final class AnimatedSpan extends ReplacementSpan {
         if (now != lastInvalidate || viewId != lastInvalidateView) {
             lastInvalidate = now;
             lastInvalidateView = viewId;
-            view.postInvalidateOnAnimation();
+            app.blaxyt.mod.Performance.redraw(view);
         }
     }
 

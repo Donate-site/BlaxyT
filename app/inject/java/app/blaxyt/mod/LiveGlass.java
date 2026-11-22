@@ -92,11 +92,11 @@ final class LiveGlass {
         // `spacing` ms (longer for a piece whose recordings come out slow), and once more
         // after it has settled, so the last picture is the right one.
         boolean due = generation != recordedGeneration || now - recordedAt > 500L;
-        boolean stale = moved || (due && now - recordedAt >= spacing);
+        boolean stale = moved || (due && now - recordedAt >= Math.max(spacing,Performance.light()?150L:48L));
         if (!stale && due && !settlePosted) {
             settlePosted = true;
             final View again = view;
-            view.postOnAnimationDelayed(() -> { settlePosted = false; again.invalidate(); }, spacing);
+            view.postOnAnimationDelayed(() -> { settlePosted = false; again.invalidate(); }, Math.max(spacing,Performance.light()?150L:48L));
         }
         if (recordingDepth > 0) {
             // drawn inside another glass's recording: what it showed last, no new recording
@@ -604,7 +604,7 @@ final class LiveGlass {
         private void take() {
             scheduled = false;
             android.view.SurfaceView source = view.get();
-            if (source == null || !source.isAttachedToWindow() || busy) return;
+            if (source == null || !source.isAttachedToWindow() || !source.isShown() || !source.hasWindowFocus() || busy) return;
             if (android.os.SystemClock.uptimeMillis() - wanted > 1500L) return;   // no glass over it any more
             android.view.Surface surface = source.getHolder().getSurface();
             if (surface == null || !surface.isValid() || source.getWidth() <= 0) { later(); return; }
@@ -640,7 +640,7 @@ final class LiveGlass {
         }
 
         private void later() {
-            if (!scheduled) { scheduled = true; MAIN.postDelayed(this::take, 50L); }
+            if (!scheduled) { scheduled = true; MAIN.postDelayed(this::take, Performance.glassInterval()); }
         }
     }
 

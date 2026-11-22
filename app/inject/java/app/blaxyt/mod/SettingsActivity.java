@@ -680,6 +680,7 @@ public class SettingsActivity extends Activity {
         if (settingsGroup == 0 && !searching) {
             if (Badges.freeStillOpen() && !Mine.hasFree()) column.addView(freeBanner());
             column.addView(groupNavigation());
+            column.addView(wrap(actionRow("bolt","Плавность и нагрузка",Performance.description(),()->Performance.show(this,()->rebuild()))));
             column.addView(wrap(actionRow("info",Local.of("Быстрый старт"),Local.of("Познакомься с возможностями blaxyT"),() -> Tutorial.show(this))));
             LinearLayout channels=card();
             channels.addView(linkRow("bolt", "Поддержать проект и получить значок", "15 звёзд · @BlaxyTagent", "https://t.me/BlaxyTagent"));
@@ -692,7 +693,7 @@ public class SettingsActivity extends Activity {
             showRestartBar();
             restoreScroll(0);
             // the pages are built while this one is looked at, so the first one opened comes at once
-            if (built == null) android.os.Looper.myQueue().addIdleHandler(() -> { prebuild(); return false; });
+            if (built == null && !Performance.light()) android.os.Looper.myQueue().addIdleHandler(() -> { prebuild(); return false; });
             return;
         }
 
