@@ -17,9 +17,9 @@ final class Version {
 
     private Version() {}
 
-    static final String MOD = "0.1.22";
+    static final String MOD = "0.1.30";
     /** What the update is called, from VERSION-NAME; empty when it has no name. */
-    static final String NAME = "Живые рамки и обновления";
+    static final String NAME = "Четыре раздела";
     static final String TIKTOK = "47.2.41";
     static final boolean TEST = false;
     /** A profiling build (BLAXYT_PROFILE=1): the mod's probes write to the log. */

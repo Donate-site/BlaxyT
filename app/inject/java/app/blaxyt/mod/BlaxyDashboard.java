@@ -2,6 +2,7 @@ package app.blaxyt.mod;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.RippleDrawable;
@@ -11,70 +12,61 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-/** Settings studio with a compact identity header and numbered directory. */
+/** Four destinations, one brand header; no continuous decorative redraws. */
 final class BlaxyDashboard {
     interface Selected { void open(int group); }
-    private static final String[] ICONS={"palette","group","play_circle","tune","bolt","extension","chat","pets"};
     private BlaxyDashboard() {}
-    static View make(Context c,Skin skin,int[] order,String[] titles,String[] notes,Selected selected){
-        LinearLayout page=column(c);page.setPadding(dp(c,20),dp(c,12),dp(c,20),dp(c,24));
-        LinearLayout hero=column(c);hero.setPadding(dp(c,22),dp(c,22),dp(c,22),dp(c,24));
-        hero.setBackground(surface(c,skin,.13f,30));
-        LinearLayout identity=new LinearLayout(c);identity.setGravity(Gravity.CENTER_VERTICAL);
-        TextView stamp=text(c,"BLAXYT / СТУДИЯ",11,ink(skin),true);stamp.setLetterSpacing(.12f);
-        identity.addView(stamp,new LinearLayout.LayoutParams(0,-2,1));
-        ImageView logo=new ImageView(c);logo.setImageBitmap(ChargeArt.picture(true));
-        logo.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-        identity.addView(logo,new LinearLayout.LayoutParams(dp(c,40),dp(c,40)));hero.addView(identity);
-        TextView heading=text(c,"Всё по-твоему.",29,skin.text,true);heading.setPadding(0,dp(c,14),0,dp(c,10));hero.addView(heading);
-        hero.addView(text(c,"Твой экран, твоя лента, твой характер.",14,skin.muted(),false));
-        page.addView(hero);
-
-        LinearLayout motion=new LinearLayout(c);motion.setGravity(Gravity.CENTER_VERTICAL);
-        motion.setPadding(dp(c,16),dp(c,18),dp(c,16),dp(c,18));motion.setBackground(surface(c,skin,.035f,22));
-        ImageView wave=new ImageView(c);wave.setImageDrawable(BlaxyGlyph.make("animation",ink(skin)));
-        LinearLayout.LayoutParams wp=new LinearLayout.LayoutParams(dp(c,26),dp(c,26));wp.rightMargin=dp(c,14);motion.addView(wave,wp);
-        LinearLayout words=column(c);words.setPadding(0,0,dp(c,10),0);
-        words.addView(text(c,"След движения",15,skin.text,true));
-        TextView note=text(c,android.os.Build.VERSION.SDK_INT>=31?"Моушен блюр":"Моушен блюр · Android 12+",12,skin.muted(),false);
-        note.setPadding(0,dp(c,5),0,0);words.addView(note);motion.addView(words,new LinearLayout.LayoutParams(0,-2,1));
-        M3Switch toggle=new M3Switch(c);toggle.setContentDescription("След движения — моушен блюр");
-        toggle.colours(Accent.colour(),skin.muted(),skin.card);toggle.setChecked(MotionBlur.on());
-        toggle.setEnabled(android.os.Build.VERSION.SDK_INT>=31);toggle.setOnChanged(MotionBlur::set);motion.addView(toggle);
-        motion.setOnClickListener(v->{if(toggle.isEnabled())toggle.performClick();});Motion.touch(motion);
-        LinearLayout.LayoutParams mp=new LinearLayout.LayoutParams(-1,-2);mp.topMargin=dp(c,12);page.addView(motion,mp);
-
-        TextView label=text(c,"СОБЕРИ СВОЙ BLAXYT",11,skin.muted(),true);
-        label.setLetterSpacing(.12f);label.setPadding(dp(c,4),dp(c,30),0,dp(c,14));page.addView(label);
-        for(int i=0;i<order.length;i++){
-            final int group=order[i];if(group<1||group>ICONS.length)continue;
-            LinearLayout entry=new LinearLayout(c);entry.setGravity(Gravity.CENTER_VERTICAL);
-            entry.setPadding(dp(c,16),dp(c,18),dp(c,16),dp(c,18));entry.setMinimumHeight(dp(c,90));
-            entry.setBackground(new RippleDrawable(ColorStateList.valueOf((Accent.colour()&0xffffff)|0x22000000),surface(c,skin,i==0?.07f:.015f,22),null));
-            ImageView symbol=new ImageView(c);symbol.setImageDrawable(BlaxyGlyph.make(ICONS[group-1],ink(skin)));
-            symbol.setPadding(dp(c,11),dp(c,11),dp(c,11),dp(c,11));symbol.setBackground(surface(c,skin,.13f,16));
-            symbol.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-            LinearLayout.LayoutParams sp=new LinearLayout.LayoutParams(dp(c,48),dp(c,48));sp.rightMargin=dp(c,16);entry.addView(symbol,sp);
-            LinearLayout copy=column(c);copy.addView(text(c,titles[group-1],17,skin.text,true));
-            TextView sub=text(c,notes[group-1],12,skin.muted(),false);sub.setPadding(0,dp(c,6),dp(c,8),0);copy.addView(sub);
-            entry.addView(copy,new LinearLayout.LayoutParams(0,-2,1));
-            TextView number=text(c,String.format(java.util.Locale.ROOT,"%02d",i+1),11,skin.muted(),true);
-            number.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);entry.addView(number);
-            entry.setFocusable(true);entry.setContentDescription(titles[group-1]+". "+notes[group-1]);
-            entry.setOnClickListener(v->selected.open(group));Motion.touch(entry);
-            LinearLayout.LayoutParams ep=new LinearLayout.LayoutParams(-1,-2);ep.bottomMargin=dp(c,8);page.addView(entry,ep);
+    static View make(Context c,Skin skin,Selected selected,Runnable back,View search,View footer){
+        LinearLayout page=column(c);page.setBackgroundColor(0xff7354b9);
+        LinearLayout hero=column(c);hero.setPadding(dp(c,20),dp(c,8),dp(c,20),dp(c,48));
+        hero.setGravity(Gravity.CENTER_HORIZONTAL);
+        hero.setBackground(new GradientDrawable(GradientDrawable.Orientation.TL_BR,new int[]{0xffa681ea,0xff7852bf,0xff563793}));
+        LinearLayout toolbar=new LinearLayout(c);
+        ImageView arrow=new ImageView(c);arrow.setImageDrawable(BlaxyGlyph.make("arrow_forward",Color.WHITE));
+        arrow.setScaleX(-1f);arrow.setPadding(dp(c,12),dp(c,12),dp(c,12),dp(c,12));
+        arrow.setBackground(new RippleDrawable(ColorStateList.valueOf(0x44ffffff),null,round(0xffffffff,24,c)));
+        arrow.setContentDescription("Вернуться в TikTok");arrow.setFocusable(true);arrow.setOnClickListener(v->back.run());
+        toolbar.addView(arrow,new LinearLayout.LayoutParams(dp(c,48),dp(c,48)));hero.addView(toolbar,new LinearLayout.LayoutParams(-1,-2));
+        ImageView logo=new ImageView(c);logo.setImageBitmap(ChargeArt.picture(true));logo.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(dp(c,88),dp(c,88));lp.topMargin=dp(c,12);hero.addView(logo,lp);
+        TextView title=text(c,Version.LITE?"BlaxyT Lite":"BlaxyT",30,Color.WHITE,true);title.setPadding(0,dp(c,16),0,dp(c,8));hero.addView(title);
+        hero.addView(text(c,"v"+Version.MOD,14,0xffefe5ff,false));page.addView(hero,new LinearLayout.LayoutParams(-1,-2));
+        LinearLayout sheet=column(c);sheet.setPadding(dp(c,16),dp(c,12),dp(c,16),dp(c,24));
+        GradientDrawable panel=round(skin.dark()?0xff1d1926:0xfff7f5fb,0,c);float r=dp(c,32);
+        panel.setCornerRadii(new float[]{r,r,r,r,0,0,0,0});sheet.setBackground(panel);
+        LinearLayout.LayoutParams sheetSize=new LinearLayout.LayoutParams(-1,-2);sheetSize.topMargin=-dp(c,28);page.addView(sheet,sheetSize);
+        View handle=new View(c);handle.setBackground(round(skin.dark()?0xff62596e:0xffd6cfdf,3,c));
+        LinearLayout.LayoutParams hp=new LinearLayout.LayoutParams(dp(c,34),dp(c,4));hp.gravity=Gravity.CENTER_HORIZONTAL;hp.bottomMargin=dp(c,18);sheet.addView(handle,hp);
+        int[] ids=Version.LITE?new int[]{2,3,1}:new int[]{2,3,1,7};
+        String[] names={"Регион","Лента","Внешний вид","Автопродление"};
+        String[] icons={"public","play_circle","palette","schedule"};
+        String[] notes={"Страна и лента региона","Видео и инструменты","Оформление и профиль","Серии и уведомления"};
+        int columns=c.getResources().getConfiguration().fontScale>1.35f?1:2;
+        for(int i=0;i<ids.length;i+=columns){
+            LinearLayout row=new LinearLayout(c);row.setBaselineAligned(false);
+            for(int j=i;j<Math.min(i+columns,ids.length);j++){
+                final int group=ids[j];LinearLayout tile=column(c);tile.setPadding(dp(c,18),dp(c,18),dp(c,14),dp(c,18));tile.setMinimumHeight(dp(c,132));
+                tile.setBackground(new RippleDrawable(ColorStateList.valueOf(0x227954c1),round(skin.dark()?0xff292332:Color.WHITE,24,c),null));
+                ImageView icon=new ImageView(c);icon.setImageDrawable(BlaxyGlyph.make(icons[j],skin.dark()?0xffceb4ff:0xff7954bb));icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+                tile.addView(icon,new LinearLayout.LayoutParams(dp(c,27),dp(c,27)));
+                TextView name=text(c,names[j],16,skin.dark()?0xfff6efff:0xff292133,true);name.setPadding(0,dp(c,18),0,dp(c,6));tile.addView(name);
+                tile.addView(text(c,notes[j],12,skin.dark()?0xffc3b8ce:0xff746a80,false));
+                tile.setContentDescription(names[j]+". "+notes[j]);tile.setFocusable(true);tile.setOnClickListener(v->selected.open(group));Motion.touch(tile);
+                LinearLayout.LayoutParams tp=new LinearLayout.LayoutParams(0,-1,1);if(j>i)tp.leftMargin=dp(c,10);row.addView(tile,tp);
+            }
+            LinearLayout.LayoutParams rp=new LinearLayout.LayoutParams(-1,-2);rp.bottomMargin=dp(c,10);sheet.addView(row,rp);
         }
-        return page;
+        LinearLayout.LayoutParams sp=new LinearLayout.LayoutParams(-1,-2);sp.topMargin=dp(c,8);sheet.addView(search,sp);
+        TextView community=text(c,"Сообщество",13,skin.muted(),true);community.setPadding(dp(c,6),dp(c,24),0,dp(c,8));sheet.addView(community);
+        sheet.addView(footer,new LinearLayout.LayoutParams(-1,-2));return page;
     }
     static int ink(Skin skin){return Expressive.mix(Accent.colour(),skin.text,skin.dark()?.40f:.48f);}
     static GradientDrawable surface(Context c,Skin skin,float tint,int radius){
-        GradientDrawable shape=new GradientDrawable();shape.setColor(Expressive.mix(skin.card,Accent.colour(),tint));
-        shape.setCornerRadius(dp(c,radius));shape.setStroke(dp(c,1),Expressive.mix(skin.card,skin.text,.08f));return shape;
+        GradientDrawable shape=round(Expressive.mix(skin.card,Accent.colour(),tint),radius,c);
+        shape.setStroke(dp(c,1),Expressive.mix(skin.card,skin.text,.08f));return shape;
     }
-    private static LinearLayout column(Context c){LinearLayout view=new LinearLayout(c);view.setOrientation(LinearLayout.VERTICAL);return view;}
-    private static TextView text(Context c,String value,int size,int colour,boolean bold){
-        TextView view=new TextView(c);view.setText(value);view.setTextSize(size);view.setTextColor(colour);
-        view.setTypeface(Typeface.create(bold?"sans-serif-medium":"sans-serif",Typeface.NORMAL));view.setIncludeFontPadding(false);return view;
-    }
+    private static GradientDrawable round(int colour,int radius,Context c){GradientDrawable d=new GradientDrawable();d.setColor(colour);d.setCornerRadius(dp(c,radius));return d;}
+    private static LinearLayout column(Context c){LinearLayout v=new LinearLayout(c);v.setOrientation(LinearLayout.VERTICAL);return v;}
+    private static TextView text(Context c,String value,int size,int colour,boolean bold){TextView v=new TextView(c);v.setText(value);v.setTextSize(size);v.setTextColor(colour);v.setTypeface(Typeface.create(bold?"sans-serif-medium":"sans-serif",Typeface.NORMAL));v.setIncludeFontPadding(false);return v;}
     private static int dp(Context c,float value){return Math.round(value*c.getResources().getDisplayMetrics().density);}
 }

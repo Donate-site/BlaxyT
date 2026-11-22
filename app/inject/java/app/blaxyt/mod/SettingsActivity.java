@@ -113,8 +113,16 @@ public class SettingsActivity extends Activity {
     private static final class Shelf {
         final int group; final String id, icon, title, note; final String[] sections;
         Shelf(int group, String id, String icon, String title, String note, String... sections) {
-            this.group = group; this.id = id; this.icon = icon; this.title = title; this.note = note; this.sections = sections;
+            this.group = dashboardGroup(group, id); this.id = id; this.icon = icon; this.title = title; this.note = note; this.sections = sections;
         }
+    }
+
+    // Keep shelf IDs and setting keys; only their navigation destination changes.
+    private static int dashboardGroup(int oldGroup, String id) {
+        if ("region".equals(id)) return 2;
+        if ("streaks".equals(id) || "notifications".equals(id)) return 7;
+        if (oldGroup == 1 || oldGroup == 2 || oldGroup == 5 || oldGroup == 8) return 1;
+        return 3;
     }
 
     private static Shelf[] shelves;
@@ -587,14 +595,15 @@ public class SettingsActivity extends Activity {
         if (intent == null || !intent.getBooleanExtra(OPEN_PLUGIN, false) || intent.getData() == null) return;
         final Uri file = intent.getData();
         intent.removeExtra(OPEN_PLUGIN);
-        settingsGroup = 6;
+        settingsGroup = 3;
         settingsPage = "plugins";
         rebuild();
         root.post(() -> reviewPlugin(file));
     }
 
     void tutorialStep(int step) {
-        settingsGroup=step==1 ? 1 : step==2 ? 3 : step==3 ? 2 : 0;
+        settingsGroup=step==1 ? 1 : step==2 ? 3 : step==3 ? 1 : 0;
+        settingsPage=step==1 ? "style" : step==2 ? "burn" : step==3 ? "gradient" : null;
         if(step==1)accentOpen=true;
         searchQuery="";rebuild();
         String section=step==1 ? Text.ACCENT : step==2 ? BURN : step==3 ? Text.GRADIENT : null;
@@ -645,7 +654,7 @@ public class SettingsActivity extends Activity {
         renderDisclosureKey=null;
         column.removeAllViews();
         topBar = null;
-        column.addView(backArrow());
+        if (settingsGroup != 0 || searchQuery.length() > 0) column.addView(backArrow());
         if (settingsGroup == STATS_PAGE) {
             column.addView(title(Local.of("Статистика видео")));
             statsPage();
@@ -672,24 +681,14 @@ public class SettingsActivity extends Activity {
         }
         Shelf open = shelf(settingsPage);
         if (open != null && open.group != settingsGroup) { settingsPage = null; open = null; }
-        column.addView(title(settingsGroup == 0 ? (Version.LITE ? "blaxyT Lite" : "blaxyT") : open != null ? open.title : groupName(settingsGroup)));
-        if(settingsGroup==0 || searchQuery.length()>0)column.addView(searchBox());
+        if(settingsGroup!=0 || searchQuery.length()>0) column.addView(title(settingsGroup == 0 ? "BlaxyT" : open != null ? open.title : groupName(settingsGroup)));
+        if(searchQuery.length()>0)column.addView(searchBox());
         if (open != null && open.note.length() > 0) { View lead = lead(open.note); lead.setTag(LEAD, Boolean.TRUE); column.addView(lead); }
         // a search builds every page as if to show it, reads them, and shows what it found instead
         final boolean searching = searchQuery.length() > 0;
         if (settingsGroup == 0 && !searching) {
             if (Badges.freeStillOpen() && !Mine.hasFree()) column.addView(freeBanner());
             column.addView(groupNavigation());
-            column.addView(wrap(actionRow("bolt","Плавность и нагрузка",Performance.description(),()->Performance.show(this,()->rebuild()))));
-            column.addView(wrap(actionRow("info",Local.of("Быстрый старт"),Local.of("Познакомься с возможностями blaxyT"),() -> Tutorial.show(this))));
-            LinearLayout channels=card();
-            channels.addView(linkRow("bolt", "Поддержать проект и получить значок", "15 звёзд · @BlaxyTagent", "https://t.me/BlaxyTagent"));
-            channels.addView(line());
-            channels.addView(linkRow("send", "ТГК: @blaxyT", "Канал BlaxyT", "https://t.me/blaxyT"));
-            channels.addView(line());
-            channels.addView(linkRow("person", "Разработчик в TikTok", "@androidtexhhh", OWNER_TIKTOK));
-            column.addView(wrap(channels));
-            column.addView(versions());
             showRestartBar();
             restoreScroll(0);
             // the pages are built while this one is looked at, so the first one opened comes at once
@@ -5195,56 +5194,49 @@ public class SettingsActivity extends Activity {
     }
 
     private String groupName(int group) {
-        switch (group) {
-            case 1: return Local.of("Твой экран");
-            case 2: return Local.of("Твоя визитка");
-            case 3: return Local.of("Ритм ленты");
-            case 4: return Local.of("Мастерская");
-            case 5: return Local.of("Внутри blaxyT");
-            case 6: return Local.of("Дополнения");
-            case 7: return Local.of("На связи");
-            case 8: return Text.FUN;
-            default: return "blaxyT";
+        switch(group){
+            case 1:return Local.of("Внешний вид");
+            case 2:return Local.of("Регион");
+            case 3:return Local.of("Лента");
+            case 7:return Local.of("Автопродление");
+            default:return "BlaxyT";
         }
     }
 
     private void showSectionHelp() {
-        String[] notes = {"", Local.of("Акцент меняет цвет кнопок и вкладок. Тема и шрифты отдельно."),
-                Local.of("Значки и градиент на ник. Сначала надо один раз подтвердить аккаунт."),
-                Local.of("Удержание «Отправить» открывает скачивание и перемотку, удержание края видео ускоряет его."),
-                Local.of("Скачивание, копии настроек, диагностика и журнал."),
-                Local.of("Здесь находятся версия мода, журнал и участники."), Local.of("Магазин и настройки плагинов. Ставь только те, которым доверяешь."),
-                Local.of("Автопродление серий и уведомления мода."),
-                Text.FUN_HELP};
-        Panel.with(this,skin,Local.of("Подсказки")).text(notes[Math.max(0,Math.min(notes.length-1,settingsGroup))])
-                .quiet(Local.of("Обучение"),() -> Tutorial.show(this)).primary(Local.of("Понятно"),null).show();
+        String note;
+        switch(settingsGroup){
+            case 1:note="Оформление, шрифты, профиль, значки и кыксики.";break;
+            case 2:note="Выбор страны и настройки региона.";break;
+            case 7:note="Продление серий на телефоне и уведомления. Для отправки нужен интернет.";break;
+            default:note="Видео, скачивание, приватность, расширения, резервные копии и производительность.";
+        }
+        Panel.with(this,skin,Local.of("Подсказки")).text(Local.of(note))
+                .quiet(Local.of("Обучение"),()->Tutorial.show(this)).primary(Local.of("Понятно"),null).show();
     }
 
     private View groupNavigation() {
-        String[] notes = {Local.of("Палитра, типографика и движение"),
-                Local.of("Коллекция значков и оформление профиля"),
-                Local.of("Страны, фильтры и воспроизведение"),
-                Local.of("Сохранённое, копии и состояние приложения"),
-                Local.of("Команда, версия и контакты"), Local.of("Каталог и твои расширения"),
-                Local.of("Приватность чатов, серии и оповещения"), Text.FUN_NOTE};
-        // Shelf order on screen: what people touch daily first, the project itself last.
-        // Lite has the shelves that have something on them for it
-        int[] shelf = Version.LITE ? new int[] {1, 3, 2, 4, 8, 5} : new int[] {1, 3, 2, 7, 8, 6, 4, 5};
-            String[] titles = new String[8];
-            for (int i = 0; i < titles.length; i++) titles[i] = groupName(i + 1);
-            return BlaxyDashboard.make(this, skin, shelf, titles, notes, chosen -> {
-                if (navigating) return;
-                navigating = true;
-                Motion.navigate(column, 1f, () -> {
-                    settingsGroup = chosen; settingsPage = null; page.scrollTo(0, 0);
-                    navigate(); navigating = false;
-                });
+        LinearLayout footer=new LinearLayout(this);footer.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout channels=card();
+        channels.addView(linkRow("send","ТГК: @BlaxyT","Канал BlaxyT","https://t.me/BlaxyT"));
+        channels.addView(line());
+        channels.addView(actionRow("info",Local.of("Быстрый старт"),Local.of("Познакомься с возможностями BlaxyT"),()->Tutorial.show(this)));
+        channels.addView(line());
+        channels.addView(linkRow("bolt","Поддержать проект и получить значок","15 звёзд · @BlaxyTagent","https://t.me/BlaxyTagent"));
+        channels.addView(line());
+        channels.addView(linkRow("person","Разработчик в TikTok","@androidtexhhh",OWNER_TIKTOK));
+        footer.addView(channels);footer.addView(versions());
+        return BlaxyDashboard.make(this,skin,chosen->{
+            if(navigating)return;navigating=true;
+            Motion.navigate(column,1f,()->{
+                settingsGroup=chosen;settingsPage=null;page.scrollTo(0,0);navigate();navigating=false;
             });
+        },this::goBack,searchBox(),footer);
     }
 
     private int groupOf(String section) {
         Shelf one = shelfOfSection(section);
-        return one == null ? 4 : one.group;
+        return one == null ? 3 : one.group;
     }
 
     /** The pages of a shelf, each with what it is for. */
@@ -5254,6 +5246,10 @@ public class SettingsActivity extends Activity {
         list.setPadding(dp(20),dp(8),dp(20),dp(16));
         TextView intro=detail(Local.of("Выбери, что настроить"));
         intro.setPadding(dp(4),0,dp(4),dp(16));list.addView(intro);
+        if(settingsGroup==3){
+            View performance=actionRow("bolt","Плавность и нагрузка",Performance.description(),()->Performance.show(this,()->rebuild()));
+            LinearLayout.LayoutParams pp=new LinearLayout.LayoutParams(-1,-2);pp.bottomMargin=dp(12);list.addView(performance,pp);
+        }
         for (Shelf one : pages) {
             LinearLayout entry = row();
             entry.setPadding(dp(16),dp(20),dp(16),dp(20));
@@ -5457,8 +5453,8 @@ public class SettingsActivity extends Activity {
         }
         else if (settingsGroup != 0) {
             // the flags are reached from the tools, so that is where back leads
-            final int to = settingsGroup == FLAGS_PAGE ? 4 : 0;
-            navigating=true;Motion.navigate(column,-1f,()->{settingsGroup=to;settingsPage=to==4?"diary":null;navigate();navigating=false;});
+            final int to = settingsGroup == FLAGS_PAGE ? 3 : 0;
+            navigating=true;Motion.navigate(column,-1f,()->{settingsGroup=to;settingsPage=to==3?"diary":null;navigate();navigating=false;});
         }
         else finish();
     }
