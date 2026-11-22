@@ -50,7 +50,7 @@ public class Test{
   check(refused("{\"mtui\":1,\"name\":\"x\",\"base\":\"md3\",\"controls\":\"ios\"}").startsWith(Text.UI_FILE_BAD_VALUE),"unknown controls");
   check(refused("{\"mtui\":1,\"name\":\"x\",\"base\":\"md3\",\"sparkles\":true}")==null,"unknown fields are passed over");
   // the three built in, written out, read back as they were
-  for(UiStyle built:new UiStyle[]{UiStyle.MATERIAL,UiStyle.LIQUID,UiStyle.ACRYLIC}){
+  for(UiStyle built:new UiStyle[]{UiStyle.MATERIAL,UiStyle.YOU,UiStyle.BLAXYT,UiStyle.LIQUID,UiStyle.ACRYLIC}){
    UiStyle back=UiStyle.read(built.json().getBytes("UTF-8"),null);
    check(back.base==built.base&&back.controls==built.controls&&back.card==built.card&&back.inner==built.inner&&back.sheet==built.sheet
      &&back.small==built.small&&back.bar==built.bar&&back.gap==built.gap&&back.blur==built.blur&&back.tint==built.tint

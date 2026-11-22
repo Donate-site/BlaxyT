@@ -66,6 +66,8 @@ final class UiStyle {
             24, 4, 28, 24, -1, 2, 1.45f, .24f, 1f, .065f, .003f, 0, 300, 1.6f, .985f, false, .045f);
     static final UiStyle BLAXYT = new UiStyle("blaxyt", "blaxyT", "@blaxygram", "", MD3, MD3,
             24, 16, 32, 14, 22, 6, 0f, .24f, 0f, 0f, 0f, 0, 200, 0f, .985f, false, .055f);
+    static final UiStyle YOU = new UiStyle("you", "Material You", "", "Цвета обоев на Android 12+; фиолетовая палитра на старых телефонах.", MD3, MD3,
+            32, 12, 36, 20, -1, 8, 0f, .20f, 0f, 0f, 0f, 0, 260, .25f, .975f, false, .07f);
     static final UiStyle LIQUID = new UiStyle("glass", "Liquid Glass", "", "", GLASS, GLASS,
             26, 6, 28, 24, -1, 0, 1.45f, .24f, 1f, .065f, .003f, 26, 300, 1.6f, 1.025f, false, .045f);
     static final UiStyle ACRYLIC = new UiStyle("fluent", "Fluent", "", "", FLUENT, FLUENT,

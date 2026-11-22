@@ -108,7 +108,7 @@ public final class Accent {
         int chosen = 0;
         try {
             if (follows(prefs)) chosen = fromWallpaper();
-            if (chosen == 0) chosen = prefs.getInt(KEY, BUILT_WITH);
+            if (chosen == 0) chosen = "you".equals(Design.key()) ? BlaxyStyle.VIOLET : prefs.getInt(KEY, BUILT_WITH);
         } catch (Throwable ignored) {
         }
         if (chosen == 0) chosen = BUILT_WITH;
@@ -117,7 +117,7 @@ public final class Accent {
     }
 
     private static boolean follows(SharedPreferences prefs) {
-        return prefs.getBoolean(KEY_MATERIAL, !prefs.contains(KEY));
+        return "you".equals(Design.key()) || prefs.getBoolean(KEY_MATERIAL, !prefs.contains(KEY));
     }
 
     /** Whether the accent in use is the wallpaper's. False on a phone that has none. */

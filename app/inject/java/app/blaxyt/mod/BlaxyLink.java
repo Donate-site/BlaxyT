@@ -38,7 +38,7 @@ final class BlaxyLink {
         Net.away("blaxyt-profile",()->{
             JSONObject value=null;String error="Не удалось связаться с сервером blaxyT. Попробуйте позже.";
             try{
-                Net.Said said=Net.talk(BASE+action,body.toString());
+                Net.Said said=BlaxyTransport.talk(BASE+action,body.toString());
                 JSONObject parsed=new JSONObject(said.body);
                 if(said.ok()){
                     value=parsed;error="";

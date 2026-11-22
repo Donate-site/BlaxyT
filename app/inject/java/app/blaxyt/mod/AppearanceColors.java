@@ -82,6 +82,7 @@ public final class AppearanceColors {
     static void reload(){colours=null;}
 
     public static int get(String role) {
+        if ("you".equals(Design.key()) && !LIKE.equals(role) && !COMMENT_LIKE.equals(role)) return 0;
         if (LIKE.equals(role)) return LikeColors.colour();
         if (COMMENT_LIKE.equals(role)) return LikeColors.commentColour();
         int at = index(role);

@@ -48,9 +48,9 @@ public final class VoiceComments {
     public static void microphoneReady(Object group){
         try{
             Object icon=NativeRead.field(group,"LLLFZ");if(!(icon instanceof View))return;
-            View view=(View)icon;view.setContentDescription("Удерживайте для записи голосового BlaxyT. Отпустите для отправки, сдвиньте влево для отмены.");
+            View view=(View)icon;view.setContentDescription("Удерживайте для записи. Отпустите для прослушивания, сдвиньте влево для отмены.");
             view.setOnTouchListener(new Hold(group));
-            // Accessibility click retains the explicit start/preview/send panel.
+            // Accessibility opens the same comment-anchored composer.
             view.setOnClickListener(v->open(group));
         }catch(Throwable e){Diary.note("voice hold: "+e.getClass().getSimpleName());}
     }
@@ -64,9 +64,8 @@ public final class VoiceComments {
                         cancelled=false;downX=event.getRawX();
                         if(recording!=null&&recording.busy){Screen.say("Дождитесь отправки записи.");return true;}
                         active=create(group.get());if(active==null)return true;
-                        active.bar=new VoiceRecordBar(view);
                         active.start();
-                        if(active.mic==null){active.bar.close();active.bar=null;active.show();active=null;return true;}
+                        if(active.mic==null){active.show();active=null;return true;}
                         view.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS);
                         if(view.getParent()!=null)view.getParent().requestDisallowInterceptTouchEvent(true);
                         return true;
@@ -81,7 +80,7 @@ public final class VoiceComments {
                         if(cancelled||event.getActionMasked()==MotionEvent.ACTION_CANCEL){current.close();Screen.say("Запись отменена");return true;}
                         if(current.interrupted){current.show();return true;}
                         if(current.mic!=null)current.stop();
-                        if(current.attach.isEnabled()){current.show();current.upload();}
+                        if(current.attach.isEnabled()){current.show();}
                         else{current.close();Screen.say("Удерживайте микрофон хотя бы секунду.");}
                         return true;
                     default:return true;
@@ -154,9 +153,14 @@ public final class VoiceComments {
             JSONObject result=null;String error="Сервер голосовых не ответил. Попробуйте ещё раз.";boolean expired=false;
             try{
                 java.util.Iterator<String> keys=extra.keys();while(keys.hasNext()){String k=keys.next();body.put(k,extra.get(k));}
-                Net.Said said=talk(action,body.toString());JSONObject value=new JSONObject(said.body);
+                Net.Said said=BlaxyTransport.talk(BASE+action,body.toString());
+                error="Сервер ответил HTTP "+said.code+". Запись сохранена здесь — попробуйте отправить ещё раз.";
+                JSONObject value=new JSONObject(said.body);
                 if(said.ok()){result=value;error="";}else{error=value.optString("error",error);expired=said.code==403&&error.startsWith("Откройте «Профиль");}
-            }catch(Exception ignored){}
+            }catch(java.net.SocketTimeoutException e){error="Сервер не успел ответить. Запись сохранена — повторите отправку.";}
+            catch(java.net.UnknownHostException e){error="Не удалось найти адрес сервера. Запись сохранена — повторите отправку.";}
+            catch(javax.net.ssl.SSLException e){error="Не удалось проверить защищённое соединение. Проверьте дату и время телефона.";}
+            catch(Exception e){Diary.note("voice request: "+e.getClass().getSimpleName());}
             final JSONObject value=result;final String message=error;final boolean retry=expired&&refresh;
             MAIN.post(()->{
                 if(retry&&live(uid))BlaxyLink.refreshVoiceProof(uid,(proof,trouble)->{
@@ -166,23 +170,6 @@ public final class VoiceComments {
                 else then.done(value,message);
             });
         });
-    }
-    private static Net.Said talk(String action,String json)throws Exception{
-        java.net.HttpURLConnection link=(java.net.HttpURLConnection)new java.net.URL(BASE+action).openConnection();
-        try{
-            link.setInstanceFollowRedirects(false);link.setConnectTimeout(12000);link.setReadTimeout(25000);link.setRequestMethod("POST");link.setDoOutput(true);
-            link.setRequestProperty("Content-Type","application/json; charset=utf-8");link.setRequestProperty("User-Agent","blaxyT-voice/1");
-            byte[] data=json.getBytes("UTF-8");if(data.length>1410000)throw new java.io.IOException("limit");link.setFixedLengthStreamingMode(data.length);
-            try(java.io.OutputStream out=link.getOutputStream()){out.write(data);}
-            int status=link.getResponseCode();if(status>=300&&status<400)throw new java.io.IOException("redirect refused");
-            if(link.getContentLength()>1410000)throw new java.io.IOException("limit");
-            java.io.InputStream stream=status>=400?link.getErrorStream():link.getInputStream();
-            if(stream==null)return new Net.Said(status,"");
-            try(java.io.InputStream in=stream;ByteArrayOutputStream out=new ByteArrayOutputStream()){
-                byte[] block=new byte[8192];int n;while((n=in.read(block))!=-1){if(out.size()+n>1410000)throw new java.io.IOException("limit");out.write(block,0,n);}
-                return new Net.Said(status,new String(out.toByteArray(),"UTF-8"));
-            }
-        }finally{link.disconnect();}
     }
     private static JSONObject params(String... pairs){JSONObject v=new JSONObject();try{for(int i=0;i<pairs.length;i+=2)v.put(pairs[i],pairs[i+1]);}catch(Exception ignored){}return v;}
     private static byte[] bytes(File file)throws Exception{
@@ -194,10 +181,11 @@ public final class VoiceComments {
 
     private static final class Recording {
         final Activity activity;final WeakReference<Object> owner;final String aid,uid;
-        final Panel panel;final TextView status,record,preview,attach;
+        final TextView status,record,preview,attach;
         MediaRecorder mic;MediaPlayer player;File audio;long began;boolean closed,busy;String nonce="";
         VoiceRecordBar bar;boolean interrupted;final Object context;final String reply;
         final AudioManager sound;final AudioManager.OnAudioFocusChangeListener focus;
+        final Runnable monitor=new Runnable(){public void run(){if(closed)return;if(!target()||bar==null||!bar.attached()){close();return;}if(player!=null){try{bar.progress(player.getDuration()>0?player.getCurrentPosition()/(float)player.getDuration():0);}catch(Exception ignored){}}MAIN.postDelayed(this,200);}};
         final Runnable tick=new Runnable(){public void run(){if(closed||mic==null)return;if(!live(uid)||!target()){close();return;}long elapsed=SystemClock.elapsedRealtime()-began;status.setText("Идёт запись · "+(elapsed/1000)+" / 60 с");if(bar!=null){int amplitude=0;try{amplitude=mic.getMaxAmplitude();}catch(Exception ignored){}bar.sample(amplitude,elapsed);}if(elapsed>=60000)stop();else MAIN.postDelayed(this,80);}};
         Recording(Activity a,Object source,String id,String account){
             activity=a;owner=new WeakReference<Object>(source);aid=id;uid=account;
@@ -205,23 +193,21 @@ public final class VoiceComments {
             reply=replyTo(source);
             sound=(AudioManager)a.getSystemService(Context.AUDIO_SERVICE);
             focus=change->{if(change<0)MAIN.post(()->focusLost());};
-            Skin skin=Skin.forSettings(a);panel=Panel.with(a,skin,"Голосовое BlaxyT");
-            panel.text("До 60 секунд. Пользователи BlaxyT увидят голосовое, остальные — текст с пояснением. Для прослушивания нужен подтверждённый профиль BlaxyT.");
-            status=new TextView(a);status.setTextColor(skin.text);status.setTextSize(18);status.setPadding(12,16,12,16);status.setText("Микрофон выключен");panel.view(status);
-            record=panel.action("Начать запись",true);record.setOnClickListener(v->{if(mic==null)start();else stop();});
-            preview=panel.action("Прослушать запись",false);preview.setEnabled(false);preview.setOnClickListener(v->preview());
-            attach=panel.action("Отправить голосовое",true);attach.setEnabled(false);attach.setOnClickListener(v->upload());
-            panel.quiet("Мои голосовые",()->mine(activity)).quiet("Отмена",null);
-            panel.dialog().setOnDismissListener(d->dispose());
+            bar=new VoiceRecordBar(editor(source));bar.onDismiss(()->dispose());
+            status=bar.status;record=bar.record;preview=bar.preview;attach=bar.attach;
+            record.setOnClickListener(v->{if(mic==null)start();else stop();});
+            preview.setEnabled(false);preview.setOnClickListener(v->preview());
+            attach.setEnabled(false);attach.setOnClickListener(v->upload());
+            MAIN.postDelayed(monitor,200);
         }
-        void show(){if(closed)return;if(bar!=null){bar.close();bar=null;}if(!panel.dialog().isShowing())panel.show();}
+        void show(){if(!closed&&bar!=null)bar.ready();}
         void focusLost(){if(closed)return;if(mic!=null){interrupted=true;stop();show();status.setText("Запись остановлена: микрофон прерван. Прослушайте перед отправкой.");}stopPreview();}
         void start(){
             if(closed||busy)return;if(!live(uid)){close();return;}
             if(android.os.Build.VERSION.SDK_INT>=23&&activity.checkSelfPermission("android.permission.RECORD_AUDIO")!=PackageManager.PERMISSION_GRANTED){
                 status.setText("Разрешите микрофон. Затем снова откройте запись.");activity.requestPermissions(new String[]{"android.permission.RECORD_AUDIO"},4831);return;
             }
-            stopPreview();
+            stopPreview();if(bar!=null)bar.recording();
             interrupted=false;
             try{
                 if(sound==null||sound.requestAudioFocus(focus,AudioManager.STREAM_MUSIC,AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)!=AudioManager.AUDIOFOCUS_REQUEST_GRANTED){status.setText("Микрофон занят. Завершите звонок или воспроизведение и попробуйте снова.");return;}
@@ -238,15 +224,15 @@ public final class VoiceComments {
         void stop(){
             if(mic==null)return;long duration=SystemClock.elapsedRealtime()-began;boolean okay=false;
             try{mic.stop();okay=duration>=400&&audio!=null&&audio.length()>100;}catch(Exception ignored){}finally{releaseMic();}
-            preview.setEnabled(okay);attach.setEnabled(okay);status.setText(okay?"Записано · "+Math.max(1,duration/1000)+" с. Можно прослушать перед отправкой.":"Запись слишком короткая. Попробуйте ещё раз.");
+            preview.setEnabled(okay);attach.setEnabled(okay);status.setText(okay?"Прослушайте и нажмите «Отправить».":"Запись слишком короткая. Попробуйте ещё раз.");show();
         }
-        void stopPreview(){if(player!=null){try{player.release();}catch(Exception ignored){}player=null;}preview.setText("Прослушать запись");if(sound!=null&&mic==null)sound.abandonAudioFocus(focus);}
+        void stopPreview(){if(player!=null){try{player.release();}catch(Exception ignored){}player=null;}preview.setText("▶ Слушать");if(bar!=null)bar.progress(0);if(sound!=null&&mic==null)sound.abandonAudioFocus(focus);}
         void preview(){
-            if(player!=null){stopPreview();return;}if(audio==null||closed||busy)return;
+            if(player!=null){try{if(player.isPlaying()){player.pause();preview.setText("▶ Продолжить");}else{player.start();preview.setText("Ⅱ Пауза");}}catch(Exception e){stopPreview();}return;}if(audio==null||closed||busy)return;
             try{
                 if(sound!=null&&sound.requestAudioFocus(focus,AudioManager.STREAM_MUSIC,AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)!=AudioManager.AUDIOFOCUS_REQUEST_GRANTED)return;
                 MediaPlayer next=new MediaPlayer();player=next;next.setDataSource(audio.getAbsolutePath());
-                next.setOnPreparedListener(p->{if(!closed&&player==p){p.start();preview.setText("Остановить прослушивание");}});
+                next.setOnPreparedListener(p->{if(!closed&&player==p){p.start();preview.setText("Ⅱ Пауза");}});
                 next.setOnCompletionListener(p->stopPreview());next.setOnErrorListener((p,a,b)->{stopPreview();status.setText("Не удалось воспроизвести запись.");return true;});next.prepareAsync();
             }catch(Exception e){stopPreview();status.setText("Не удалось воспроизвести запись.");}
         }
@@ -285,8 +271,8 @@ public final class VoiceComments {
                 }catch(Exception e){MAIN.post(()->{busy=false;if(!closed){record.setEnabled(true);preview.setEnabled(true);attach.setEnabled(true);status.setText("Не удалось прочитать запись. Запишите заново.");}});}
             });
         }
-        void close(){panel.close();dispose();}
-        void dispose(){if(closed)return;closed=true;if(bar!=null){bar.close();bar=null;}releaseMic();stopPreview();if(audio!=null)audio.delete();if(recording==this)recording=null;}
+        void close(){dispose();}
+        void dispose(){if(closed)return;closed=true;MAIN.removeCallbacks(monitor);releaseMic();stopPreview();if(bar!=null){bar.close();bar=null;}if(audio!=null)audio.delete();if(recording==this)recording=null;}
     }
 
     private static void send(Object owner,String aid,String uid,Object context,String reply,String text){

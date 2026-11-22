@@ -902,6 +902,8 @@ class Build:
         like_hooks = 0
         speed_lock = 0
         edge_speed_lock = 0
+        hold_start = 0
+        hold_engine = 0
         feature_hits = {"seekbar":0,"comment copy":0,"native comment clipboard":0,"publication date":0,"visible publication date":0,"double-tap heart":0,"native heart tint":0,"comment dim exclusion":0,"ads":0}
         feature_hits["native comment text actions"]=0
         feature_hits["native heart reuse"]=0
@@ -984,6 +986,8 @@ class Build:
             like_hooks += counts.get("feed Lottie setAnimation", 0)
             speed_lock += counts.get("hold speed, feed touch", 0)
             edge_speed_lock += counts.get("hold speed, edge touch", 0)
+            hold_start += counts.get("blaxyt native hold rate", 0)
+            hold_engine += counts.get("blaxyt engine hold rate", 0)
             self.detail(
                 "%s: %d (%s)"
                 % (name, hits, ", ".join("%s x%d" % (k.split("(")[0], v)
@@ -1026,6 +1030,8 @@ class Build:
                 "TikTok's feed touch listener did not match: the hold speed the "
                 "mod lets people choose would never be applied"
             )
+        if hold_start != 1 or hold_engine != 1:
+            raise RuntimeError("Hold-speed start/engine hooks missing or duplicated")
         if not pink:
             self.detail("WARNING: the accent colour is not a constant in this apk any "
                         "more, so the colour picker will have nothing to change")

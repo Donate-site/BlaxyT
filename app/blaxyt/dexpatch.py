@@ -60,6 +60,13 @@ AVATAR_CLASS="Lcom/ss/android/ugc/aweme/feed/assem/avatar/FeedAvatarDefaultAssem
 PROFILE_CONTAINER="Lcom/ss/android/ugc/profile/platform/base/component/BaseContainerComponent;"
 PROFILE_HEADER="Lcom/ss/android/ugc/profile/platform/business/header/base/HeaderBaseContainerComponent;"
 MESSAGE_CLASSES=("Lcom/ss/android/ugc/aweme/im/sdk/chat/messagelist/skeleton/cell/IMSkeletonLayoutReusedUISlotAssem;","Lcom/ss/android/ugc/aweme/im/sdk/chat/messagelist/skeleton/cell/SkeletonLayoutReusedUISlotAssem;")
+CONVERSATION_CLASSES={
+    "Lcom/ss/android/ugc/aweme/im/chatroom/input/container/BaseChatInputAssem;":"input",
+    "Lcom/ss/android/ugc/aweme/im/chatroom/common/titlebar/api/BaseIMTitleBarAssem;":"header",
+    "Lcom/ss/android/ugc/aweme/story/feed/immersive/dm/StoryQuickDMBottomBarAssem;":"story",
+    "Lcom/ss/android/ugc/aweme/story/feed/immersive/component/StoryOtherBottomBarComponent;":"story",
+    "Lcom/ss/android/ugc/aweme/im/sdk/chat/ui/base/assems/skeleton/slot/GreetingCardReusedUISlot;":"greeting",
+}
 PUSH_GUIDE="Lcom/ss/android/ugc/aweme/unifiedauth/push/UniAuthGuidePopupServiceImpl;"
 FRIENDS_RESPONSE="Lcom/ss/android/ugc/aweme/relation/model/FriendsListResponse;"
 COMMENT_IMAGE = "Lcom/ss/android/ugc/aweme/comment/model/CommentImageStruct;"
@@ -1131,6 +1138,11 @@ def rewrite_anchored(root: str) -> Dict[str, int]:
                     if hits:counts[label]=counts.get(label,0)+1
                     return changed
                 text=re.sub(pattern,patch,text)
+            for component,kind in CONVERSATION_CLASSES.items():
+                if component in declaration:
+                    add_exit(r"(?ms)^\.method public (?:final )?onViewCreated\(Landroid/view/View;\)V.*?^\.end method",
+                             "    invoke-static/range {p1 .. p1}, Lapp/blaxyt/mod/ConversationStyle;->"+kind+"(Landroid/view/View;)V\n",
+                             "blaxyt conversation surfaces")
             if "Lcom/ss/android/ugc/aweme/feed/assem/share/VideoShareAssem;" in declaration:
                 def capture_share(match):
                     body=match.group(0)
@@ -1848,34 +1860,54 @@ def carries_an_anchor(dex: bytes) -> bool:
             or any(owner.encode() in dex for owner in (REPOST_CLASS,AVATAR_CLASS,PROFILE_CONTAINER,PROFILE_HEADER,PUSH_GUIDE)+MESSAGE_CLASSES)
             or SPEED_TOUCH_CLASS.encode() in dex or SPEED_EDGE_CLASS.encode() in dex or SPEED_START_CLASS.encode() in dex
             or PLAYER_SETTINGS.encode() in dex
-            or defines(dex, PLAYER_VIEW_CONFIG))
+            or defines(dex, PLAYER_VIEW_CONFIG) or defines(dex, SPEED_ENGINE_CLASS)
+            or any(defines(dex,owner) for owner in CONVERSATION_CLASSES))
 
 
 SPEED_START_CLASS = "Lcom/ss/android/ugc/aweme/feed/longvideo/edgespeedup/EdgeSpeedupAssem;"
+SPEED_ENGINE_CLASS = "Lcom/ss/ttm/player/TTPlayerClient;"
 
 def rewrite_hold_start(root: str) -> Dict[str, int]:
     """Replace only the native hold-start rate. Native release/cancel restores its saved rate."""
     target = "Lapp/blaxyt/mod/SpeedGesture;->selectedRate()F"
+    counts = {}
     for directory, _, files in os.walk(root):
         for name in files:
             if not name.endswith(".smali"): continue
             path = os.path.join(directory, name)
             with open(path, encoding="utf-8") as handle: text = handle.read()
+            if SPEED_ENGINE_CLASS in text.split("\n", 1)[0]:
+                start=text.find('.method public final LJIL(LX/0qBO;)V\n')
+                if start<0:raise RuntimeError('Native engine speed method changed')
+                end=text.index('.end method',start);method=text[start:end]
+                hook='    invoke-static {v2}, Lapp/blaxyt/mod/SpeedGesture;->engineRate(F)F\n    move-result v2\n'
+                anchor='    iget v2, p1, LX/0qBO;->LIZLLL:F\n'
+                if '->engineRate(F)F' not in method:
+                    if method.count(anchor)!=1:raise RuntimeError('Native engine speed value changed')
+                    method=method.replace(anchor,anchor+hook)
+                    with open(path,'w',encoding='utf-8') as handle:handle.write(text[:start]+method+text[end:])
+                counts['blaxyt engine hold rate']=1
+                continue
             if SPEED_START_CLASS not in text.split("\n", 1)[0]: continue
             start = text.find(".method public final wt(FF)V\n")
             if start < 0: raise RuntimeError("Native hold-start method changed")
             end = text.index(".end method", start)
             method = text[start:end]
-            if target in method: return {"blaxyt native hold rate": 1}
+            if target in method and '->begin(Ljava/lang/Object;)V' in method:
+                counts['blaxyt native hold rate']=1
+                continue
             anchor = "    invoke-virtual {p0, v3}, " + SPEED_START_CLASS + "->zq(F)V"
             if method.count(anchor) != 1 or "const/high16 v3, 0x40000000" not in method:
                 raise RuntimeError("Native hold-rate anchor changed")
             hook = "    invoke-static {}, " + target + "\n\n    move-result v3\n\n"
-            method = method.replace(anchor, hook + anchor, 1)
+            if target not in method:method = method.replace(anchor, hook + anchor, 1)
+            begin='    iput-boolean v2, p0, '+SPEED_START_CLASS+'->LLLLLZ:Z\n'
+            if method.count(begin)!=1:raise RuntimeError('Native hold lifecycle changed')
+            method=method.replace(begin,begin+'\n    invoke-static {p0}, Lapp/blaxyt/mod/SpeedGesture;->begin(Ljava/lang/Object;)V\n')
             with open(path, "w", encoding="utf-8") as handle:
                 handle.write(text[:start] + method + text[end:])
-            return {"blaxyt native hold rate": 1}
-    return {}
+            counts['blaxyt native hold rate']=1
+    return counts
 
 
 def rewrite_speed_touch(root: str) -> Dict[str, int]:

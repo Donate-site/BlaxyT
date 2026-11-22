@@ -16,7 +16,7 @@ import blaxyt.build as build_module
 
 
 class SourceTools(Toolchain):
-    version_code = 2024704069
+    version_code = 2024704070
 
     def deflate_many(self, blobs):
         return [zlib.compress(blob, 6)[2:-4] for blob in blobs]
@@ -44,7 +44,7 @@ def main():
     parser.add_argument('--keystore', type=Path)
     parser.add_argument('--alias', default='androiddebugkey')
     parser.add_argument('--dex-helper-jar', type=Path, help='APKEditor.jar containing org.jf.dexlib2 and dependencies')
-    parser.add_argument('--version-code', type=int, default=2024704069)
+    parser.add_argument('--version-code', type=int, default=2024704070)
     args = parser.parse_args()
     if not args.apk.is_file():
         parser.error('Input APK does not exist')

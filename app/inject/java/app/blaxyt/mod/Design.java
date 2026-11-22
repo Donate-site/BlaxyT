@@ -38,7 +38,7 @@ final class Design {
     }
 
     private static UiStyle builtIn(String key) {
-        return "blaxyt".equals(key)?UiStyle.BLAXYT:"glass".equals(key)?UiStyle.LIQUID:"fluent".equals(key)?UiStyle.ACRYLIC:UiStyle.BLAXYT;
+        return "you".equals(key)?UiStyle.YOU:"md3".equals(key)?UiStyle.MATERIAL:"blaxyt".equals(key)?UiStyle.BLAXYT:"glass".equals(key)?UiStyle.LIQUID:"fluent".equals(key)?UiStyle.ACRYLIC:UiStyle.BLAXYT;
     }
 
     /** What is chosen: "md3", "glass", "fluent", or "custom:" and an installed style's id. */
@@ -48,7 +48,7 @@ final class Design {
         Context context=BlaxyRuntime.context();
         if(context==null)return "blaxyt";
         String saved=context.getSharedPreferences(BlaxyRuntime.PREFS,0).getString(KEY,"blaxyt");
-        chosen="md3".equals(saved)?"blaxyt":valid(saved)?saved:"blaxyt";
+        chosen=valid(saved)?saved:"blaxyt";
         return chosen;
     }
 
@@ -59,7 +59,7 @@ final class Design {
     }
 
     static boolean valid(String key) {
-        if("blaxyt".equals(key) || "md3".equals(key) || "glass".equals(key) || "fluent".equals(key))return true;
+        if("you".equals(key) || "blaxyt".equals(key) || "md3".equals(key) || "glass".equals(key) || "fluent".equals(key))return true;
         return UiStyle.custom(key) && UiStyle.load(BlaxyRuntime.context(),key)!=null;
     }
     static boolean blaxyLayout() { return true; }
@@ -75,6 +75,7 @@ final class Design {
         if(!valid(key))throw new IllegalArgumentException("Unknown interface style");
         context.getSharedPreferences(BlaxyRuntime.PREFS,0).edit().putString(KEY,key).apply();
         chosen=key;style=null;
+        Accent.reload();Themes.forget();AppearanceColors.reload();
         OPTICS.clear();GlassBackdrop.changed();
     }
 

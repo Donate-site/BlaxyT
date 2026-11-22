@@ -194,13 +194,14 @@ public final class Themes {
         // was chosen -- but only where the phone has a palette to offer:
         // before Android 12 there is none, and a theme that is on by default
         // and paints nothing but its own fallback is worse than no theme.
-        boolean on = flag(KEY_ON, available());
-        boolean material = flag(KEY_MATERIAL, true);
+        boolean you = "you".equals(Design.key());
+        boolean on = you || flag(KEY_ON, available());
+        boolean material = you || flag(KEY_MATERIAL, true);
         int chosenText = 0;
         int chosenBackground = 0;
         if (material) {
             // a colour picked in the circles under the switch, or the wallpaper's
-            int seed = MaterialSeeds.seed();
+            int seed = you ? (available() ? 0 : BlaxyStyle.VIOLET) : MaterialSeeds.seed();
             chosenText = seed != 0 ? MaterialSeeds.neutral(seed, dark ? 95 : 10) : fromSystem(true);
             chosenBackground = seed != 0 ? MaterialSeeds.neutral(seed, dark ? 10 : 95) : fromSystem(false);
         }

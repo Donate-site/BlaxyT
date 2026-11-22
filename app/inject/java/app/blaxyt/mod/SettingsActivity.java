@@ -5487,7 +5487,7 @@ public class SettingsActivity extends Activity {
         head.addView(label(Text.DESIGN), grow());
         box.addView(sized(head, 52));
         // the three built in, then the ones people made (.mtui, UiStyle)
-        java.util.List<UiStyle> styles = new java.util.ArrayList<>(java.util.Arrays.asList(UiStyle.BLAXYT, UiStyle.MATERIAL, UiStyle.LIQUID, UiStyle.ACRYLIC));
+        java.util.List<UiStyle> styles = new java.util.ArrayList<>(java.util.Arrays.asList(UiStyle.BLAXYT, UiStyle.MATERIAL, UiStyle.YOU, UiStyle.LIQUID, UiStyle.ACRYLIC));
         styles.addAll(UiStyle.installed(this));
         boolean many = styles.size() > 3;
         LinearLayout strip = new LinearLayout(this);
@@ -5621,6 +5621,7 @@ public class SettingsActivity extends Activity {
         panel.text(Text.DESIGN_NOTE).section(null);
         panel.option("blaxyT","blaxyt".equals(Design.key()),true,()->applyDesign("blaxyt"));
         panel.option("Material 3","md3".equals(Design.key()),true,()->applyDesign("md3"));
+        panel.option("Material You","you".equals(Design.key()),true,()->applyDesign("you"));
         panel.option("Liquid Glass","glass".equals(Design.key()),true,()->applyDesign("glass"));
         panel.option("Fluent","fluent".equals(Design.key()),true,()->applyDesign("fluent"));
         for(UiStyle style:UiStyle.installed(this))panel.option(style.name,style.key.equals(Design.key()),true,()->applyDesign(style.key));
