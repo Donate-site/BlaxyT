@@ -1,0 +1,22 @@
+Generated with the built-in image generation tool, one edit per skin.
+Reference: kyksik_plush.png (user mascot isolated in earlier artwork pass).
+Shared prompt: Create ONE alternate cosmetic skin of the attached kyksik mascot for a mobile app. Keep its round orb silhouette, little spiky cat ears, black bead eyes where appropriate, and distinctive small embroidered central crest, transformed to fit the theme. This is the SAME kyksik dressed as the character, not a full humanoid character.
+Shared finishing constraints: High quality tactile plush collectible with clean embroidery, front view, entire character with generous safe margin, centered square icon composition, genuinely transparent background, no backdrop, no text, no watermark, no chart or multiple variants. Keep original recognizable orb mascot proportions.
+
+kris: Kris from Deltarune: dark navy shaggy hair fringe, pale blue face, silver armor-like fabric across lower orb, bright magenta scarf. recognizable Dark World Kris.
+Saved: kyksik_kris.png
+
+susie: Susie from Deltarune: purple face, shaggy dark magenta plum hair, black leather-like lower band with gold studs, tiny tooth/fang and confident smile. No extra limbs.
+Saved: kyksik_susie.png
+
+ralsei: Ralsei from Deltarune: cream white fluffy face, round thin black glasses, floppy green pointed wizard hat, pink scarf, green lower section with small black heart. Hat must fit canvas.
+Saved: kyksik_ralsei.png
+
+noelle: Noelle Holiday from Deltarune: cream fluffy deer-like face with recognizable golden blonde hair, small plush antlers behind ears, red nose and soft white robe-like lower section with tiny icy-blue snowflake. Retain kyksik round mascot.
+Saved: kyksik_noelle.png
+
+roaring: Roaring Knight from Deltarune transformed into a cute spherical kyksik: matte obsidian black armor-like plush, sharp pale silver branching horns, white slit/visor face highlights, silver crest, dark smoky purple rim details. Cute ominous knight orb, no weapons, no humanoid body.
+Saved: kyksik_roaring.png
+
+Other skins: cosmic (violet plush with gold stars), frost (white/cyan plush with snowflakes), cyber (dark glossy with cyan/violet), gold (gold/ivory). All use the same mascot silhouette and transparent background.
+Vector charge logo artwork: icons/blaxyt/vectors/*.svg. New editable geometric artwork rendered locally; no generated mascot files were recoloured by scripts.

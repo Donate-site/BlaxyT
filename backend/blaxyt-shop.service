@@ -1,0 +1,29 @@
+[Unit]
+Description=blaxyT badge shop
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=blaxyt-shop
+Group=blaxyt-shop
+WorkingDirectory=/opt/blaxyt-shop
+EnvironmentFile=/etc/blaxyt-shop.env
+ExecStart=/usr/bin/python3 /opt/blaxyt-shop/shop.py
+Restart=on-failure
+RestartSec=5
+StateDirectory=blaxyt-shop
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/blaxyt-shop
+MemoryMax=192M
+CPUQuota=25%
+TasksMax=32
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target

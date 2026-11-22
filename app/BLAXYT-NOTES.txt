@@ -1,0 +1,107 @@
+blaxyT — независимый мод от независимых разработчиков
+
+Branding and skin collection changes, 2026-11-20.
+Input APK: tiktok-47-2-41.apk (TikTok 47.2.41).
+Upstream snapshot: a0089402f266a67700432fdb56a36fe7e45da6a3.
+
+Visible product branding changed to blaxyT. Technical Java names and preference
+keys remain stable to avoid breaking reflection and stored settings.
+The user-supplied kyksik replaces the running mascot, settings previews and widget.
+Eleven skins are bundled, including five Deltarune-inspired costumes. Decoded
+sprites are bounded and cached. Nineteen launcher alternatives are offered.
+Two local charge badges replace remotely loaded badge definitions.
+No host network settings were changed.
+
+Author/support UI removal is based on the user's statement in this chat that
+the upstream author separately authorized removing that block and the modified
+version notice. No written grant was supplied or independently verified.
+LICENSE and ADDITIONAL-TERMS.md are retained verbatim, in this source snapshot; local Git history is not published.
+This file records provenance; it is not an assertion that all code is original.
+
+An APK build has been requested and is recorded in build-windows-029.log.
+No automated tests, emulator installation or runtime validation were performed
+for these changes, at the user's request. VPN-free publishing, clone-package
+compatibility and general stability are not established by this branding work.
+The upstream update URL is unset to prevent this fork updating to another mod.
+The update feature remains available for a future blaxyT update source.
+
+Artwork: built-in image generation tool, separate edit per user reference.
+Prompt: isolate the same full plush/glossy kyksik on a transparent background;
+preserve red-white-blue colors, black eyes, yellow crest and material texture;
+restore clipped edges only, center with a small margin, no text or additions.
+Final assets: assets/blaxyt/kyksik_plush.png and kyksik_glossy.png.
+
+Skin catalog: assets/blaxyt/skin-catalog.json.
+Artwork prompts and tool record: assets/blaxyt/ARTWORK-PROMPTS.txt.
+Editable charge vector artwork: icons/blaxyt/vectors/.
+
+0.1.1: visible author handle and profile/demo labels changed to @blaxygram;
+author social links updated. Internal namespaces and provenance retained.
+User reports successful login in official TikTok, failure in this fork.
+Clone package/signing identity is a hypothesis, not a diagnosed root cause.
+No login retry bypass or login fix is claimed for this branding release.
+
+0.1.2 original-package variant: explicitly requested by user for replacement
+of official TikTok. Skip clone_identity and preserve stock provider authorities.
+Package com.zhiliaoapp.musically; local signing key only, no official signature.
+All functional patches retained. No runtime login validation.
+
+0.1.3: user explicitly requested removal of all project update/support UI.
+Deleted updater class and startup/resume calls, donation methods and third-visit prompt.
+Removed update navigation, controls and backup preference; retained version display.
+Native settings copied row uses its own vector resource 0x33010000, not the music icon.
+No runtime tests run; functions unrelated to project update/support retained.
+
+0.1.4: own blaxyT dashboard, violet palette, native profile/navigation styling,
+rounded controls and short transitions. One-time appearance migration;
+motion blur preference is never auto-enabled. Optional API31 blur uses bounded
+view discovery, cached effects and lifecycle cleanup. Runtime untested.
+Additional source fixes: CommentStyle detach restores original views and clears
+observer tags; Ghost toggle schedules/cancels upkeep immediately; MotionBlur scan
+stops iteration at its budget; Watch isolates per-module lifecycle failures.
+
+0.1.5: MotionBlur discovers the foreground comments panel before generic
+scroll containers and samples its RecyclerView child displacement for flings.
+Layout scans are deferred instead of dropped inside the throttle interval;
+touch-down rescans. Comment appearance switch remains independent.
+No runtime test performed.
+
+0.1.6: explicitly removed Screamer, Avariyka and FakeLag implementations,
+lifecycle calls, settings shelves/rows, previews and labels. Removed screamer
+backup keys; one-time cleanup of old prank switches. New blaxyT dashboard,
+featured appearance card with selected kyksik, grouped surfaces, row typography
+and spacing. Existing user colours and other styles preserved. Runtime untested.
+
+0.1.7: local RegionSlots picker, three sequential stops, uniform random country,
+explicit apply and reroll, no network or latency claim. Manual list retained.
+Fixed default icon label; replaced Vice City preset with Amethyst, migrating
+only selected preset 2. In-app plugin/style help replaces upstream UI links.
+Internal compatibility identifiers, licenses and provenance retained. Runtime untested.
+
+0.1.8: RegionSlots renders bundled Twemoji flags with cached Paint/paths/shader.
+Per-reel sequences end at the chosen country to avoid the previous last-frame
+replacement. Staggered eased travel, soft edges, large result country name and
+fade/slide caption. Fictional regions remain manual-only. Honors disabled system
+animations; cancels animations on dismiss/detach. No runtime testing.
+
+0.1.9: developer handle changed to androidtexhhh in grant rule, catalogue
+and settings. BadgeShop public supporter feed client prepared with EMPTY
+endpoint: inactive until HTTPS deployment and a connected build. Separate
+blaxyt-shop Stars bot draft; sales disabled. No tokens or server access supplied.
+Python compilation only; no payment or device tests.
+
+0.1.17: Runtime moved to app.blaxyt.mod; Python build modules to blaxyt.
+Public legacy plugin API and private saved-data identifiers retained for upgrades.
+Badge ownership redesigned as a validated immutable snapshot with explicit role/source registry.
+Added helper cosmetic role, owner-only grant/revoke, helmet/person/hammer artwork.
+Added TikTok Mi public UID catalogue through allowlisted source registry.
+Removed heading audio and surprise mascot popup, excluded meow audio from APK.
+Replaced timed hold-speed probing with anchored native hold-start rate injection; range 0.5-5x.
+Inherited source notices/licenses and external badge provenance retained.
+This is a maintained derivative, not a wholly independent implementation of every feature.
+
+0.1.18: Feed/region routing refactor, bounded model cache, fewer mascot frame allocations. Persistent Kyksik growth (20 eaten fish, max 2x) and new vector fish. Shared live creator profile previews. Removed AI plugin-writing entry; existing plugins retained. Download payload video-track/decoder validation, real quality labels, mirror fallback, storage permission prompt and clearer errors.
+
+0.1.19: Replaced remote/configurable plugin store with offline BlaxyT catalogue. Four optional bundled extensions: Light effects, economical Kyksik drawing, short video feed, foreground-only break reminders. Independent install/enable/remove state; preferences and imported MTP plugins preserved.
+
+0.1.20: Hold/release voice recording with actual microphone waveform; swipe-left cancellation, native send guards, inline play/pause and progress. Compact explanatory comment, verified row-video fallback, one expired-profile recheck. Existing media management and author/video authorization retained. No physical-phone end-to-end test.

@@ -1,0 +1,23 @@
+{
+  "project": "blaxyT",
+  "delivery": "APK update",
+  "badges": [
+    {
+      "id": "developer",
+      "image": "charge_material",
+      "title": "blaxyT · Заряд разработчика",
+      "handles": [
+        "androidtexhhh"
+      ],
+      "users": [],
+      "text": "Этот человек участвует в разработке blaxyT"
+    },
+    {
+      "id": "supporter",
+      "image": "charge",
+      "title": "blaxyT · Заряд",
+      "users": [],
+      "text": "Заряд — значок сообщества blaxyT"
+    }
+  ]
+}

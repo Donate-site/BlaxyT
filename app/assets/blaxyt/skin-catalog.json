@@ -1,0 +1,57 @@
+[
+  {
+    "id": "classic",
+    "name": "Плюшевый",
+    "file": "kyksik_plush.png"
+  },
+  {
+    "id": "glossy",
+    "name": "Глянцевый",
+    "file": "kyksik_glossy.png"
+  },
+  {
+    "id": "kris",
+    "name": "Крис",
+    "file": "kyksik_kris.png"
+  },
+  {
+    "id": "susie",
+    "name": "Сьюзи",
+    "file": "kyksik_susie.png"
+  },
+  {
+    "id": "ralsei",
+    "name": "Ральзей",
+    "file": "kyksik_ralsei.png"
+  },
+  {
+    "id": "noelle",
+    "name": "Ноэль",
+    "file": "kyksik_noelle.png"
+  },
+  {
+    "id": "roaring",
+    "name": "Рокочущий рыцарь",
+    "file": "kyksik_roaring.png"
+  },
+  {
+    "id": "cosmic",
+    "name": "Космос",
+    "file": "kyksik_cosmic.png"
+  },
+  {
+    "id": "frost",
+    "name": "Иней",
+    "file": "kyksik_frost.png"
+  },
+  {
+    "id": "cyber",
+    "name": "Кибер",
+    "file": "kyksik_cyber.png"
+  },
+  {
+    "id": "gold",
+    "name": "Золотой",
+    "file": "kyksik_gold.png"
+  }
+]
