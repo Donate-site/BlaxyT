@@ -1900,7 +1900,7 @@ public class SettingsActivity extends Activity {
     /** The badges anybody can still get, each with what it takes and the button that starts on it. */
     private void badgesToGet() {
         LinearLayout information = card();
-        information.addView(quiet("Заряд — 100 Stars без срока. Заряд разработчика выдаётся командой blaxyT."));
+        information.addView(quiet("Заряд — 15 Stars без срока. Заряд разработчика выдаётся командой blaxyT."));
         information.addView(button("Привязать профиль · Открыть бота",this::proveAccount));
         information.addView(quiet("@androidtexhhh — в команде разработки blaxyT"));
         Badges.start(this);

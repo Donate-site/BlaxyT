@@ -192,7 +192,7 @@ def checkout(query):
                      and linked and linked['uid']==order['uid'] and linked['bio_present']
                      and linked['checked'] > time.time()-600
                      and order['buyer'] == query['from']['id']
-                     and order['price'] == query['total_amount'] and query['currency'] == 'XTR'
+                     and order['price'] == PRICE and order['price'] == query['total_amount'] and query['currency'] == 'XTR'
                      and time.time() - order['created'] < 1800 and not active(db, order['uid'])
                      and not db.execute("SELECT 1 FROM orders WHERE uid=? AND id<>? AND status='checkout' AND created>? LIMIT 1",
                                         (order['uid'],order['id'],int(time.time())-1800)).fetchone())
@@ -295,12 +295,12 @@ def handle(update):
             say(chat, f'Заряд для {linked["code"]}\nЦена: {PRICE} Stars · {period}\n'
                 'Значок виден только в blaxyT.\n'+NOTICE+'\nУсловия: /terms. '
                 'Нажимая кнопку, вы принимаете условия покупки.',
-                reply_markup={'inline_keyboard': [[{'text': 'Принимаю условия · 100 Stars', 'callback_data': 'buy:' + linked['code']}]]})
+                reply_markup={'inline_keyboard': [[{'text': f'Принимаю условия · {PRICE} Stars', 'callback_data': 'buy:' + linked['code']}]]})
     elif command in ('/paysupport', '/support'):
         say(chat, 'Вопросы по оплате и возврату: ' + (SUPPORT or 'магазин ещё настраивается') +
             '. Укажите номер заказа; пароль TikTok не нужен.')
     elif command == '/terms':
-        say(chat, '100 Stars — разовая покупка значка «Заряд» для связанного профиля blaxyT без срока. '
+        say(chat, f'{PRICE} Stars — разовая покупка значка «Заряд» для связанного профиля blaxyT без срока. '
             'Это не официальная галочка TikTok. Срок и цена указаны в счёте. '
             'Разработческий значок не продаётся. '+NOTICE+' Вопросы по выдаче/возврату: /paysupport. '
             'Telegram не отвечает за покупки в этом боте.')
@@ -321,7 +321,7 @@ def handle(update):
             say(chat, 'blaxyT · Заряд\nОтправьте ID blaxy-… из приложения и подтвердите Telegram там же. '
                 'Оплата пока выключена.\n/status — привязка\n/orders — покупки\n/privacy — данные\n/paysupport — помощь')
         else:
-            say(chat, 'blaxyT · Заряд\nОтправьте свой ID blaxy-… для привязки.\n/status — привязка\n/buy — Заряд за 100 Stars\n/orders — покупки\n/terms — условия\n/privacy — данные\n/paysupport — помощь')
+            say(chat, f'blaxyT · Заряд\nОтправьте свой ID blaxy-… для привязки.\n/status — привязка\n/buy — Заряд за {PRICE} Stars\n/orders — покупки\n/terms — условия\n/privacy — данные\n/paysupport — помощь')
 
 
 class LimitedHTTP(ThreadingHTTPServer):

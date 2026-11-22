@@ -15,7 +15,7 @@ import shop
 class Flow(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();shop.DB=Path(self.temp.name)/'test.sqlite3'
-        shop.LIVE=True;shop.PRICE=100;shop.DAYS=0
+        shop.LIVE=True;shop.PRICE=15;shop.DAYS=0
         shop.LINKS=identity.Identity(shop.database);shop.prepare()
         self.calls=[]
         self.api=patch.object(shop,'api',side_effect=lambda method,**data:self.calls.append((method,data)) or {})
@@ -41,10 +41,10 @@ class Flow(unittest.TestCase):
     def order(self):
         shop.invoice(42,42,self.uid)
         data=[x[1] for x in self.calls if x[0]=='sendInvoice'][-1]
-        self.assertEqual(data['currency'],'XTR');self.assertEqual(data['prices'][0]['amount'],100)
+        self.assertEqual(data['currency'],'XTR');self.assertEqual(data['prices'][0]['amount'],15)
         return data['payload']
 
-    def pay(self,key,charge='charge-1',amount=100):
+    def pay(self,key,charge='charge-1',amount=15):
         shop.paid({'from':{'id':42},'chat':{'id':42},'successful_payment':{
             'invoice_payload':key,'telegram_payment_charge_id':charge,'total_amount':amount,'currency':'XTR'}})
 
@@ -75,11 +75,19 @@ class Flow(unittest.TestCase):
 
     def test_checkout_identity_and_replay(self):
         self.link();key=self.order()
-        query={'id':'q1','invoice_payload':key,'from':{'id':43},'total_amount':100,'currency':'XTR'}
+        query={'id':'q1','invoice_payload':key,'from':{'id':43},'total_amount':15,'currency':'XTR'}
         shop.checkout(query);self.assertFalse(self.calls[-1][1]['ok'])
         query['from']['id']=42;shop.checkout(query);self.assertTrue(self.calls[-1][1]['ok'])
         shop.checkout(query);self.assertTrue(self.calls[-1][1]['ok'])
         query['id']='different';shop.checkout(query);self.assertFalse(self.calls[-1][1]['ok'])
+
+    def test_previous_price_invoice_rejected_but_old_receipt_honored(self):
+        self.link();key=self.order()
+        with shop.database() as db:db.execute('UPDATE orders SET price=100 WHERE id=?',(key,))
+        shop.checkout({'id':'old-price','invoice_payload':key,'from':{'id':42},'total_amount':100,'currency':'XTR'})
+        self.assertFalse(self.calls[-1][1]['ok'])
+        self.pay(key,amount=100)
+        with shop.database() as db:self.assertTrue(shop.active(db,self.uid))
 
     def test_payment_idempotency_and_refund(self):
         self.link();key=self.order();self.pay(key);self.pay(key)
@@ -139,7 +147,7 @@ class Flow(unittest.TestCase):
 
     def test_expired_checkout_does_not_block_following_updates(self):
         self.link();key=self.order()
-        query={'id':'expired','invoice_payload':key,'from':{'id':42},'total_amount':100,'currency':'XTR'}
+        query={'id':'expired','invoice_payload':key,'from':{'id':42},'total_amount':15,'currency':'XTR'}
         with patch.object(shop,'api',side_effect=shop.TelegramError('answerPreCheckoutQuery',400,'query is too old')):
             shop.checkout(query)
         with shop.database() as db:
