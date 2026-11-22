@@ -86,7 +86,7 @@ public final class Dates {
         return new String(Character.toChars(0x1F1E6+code.charAt(0)-'A'))+new String(Character.toChars(0x1F1E6+code.charAt(1)-'A'));
     }
 
-    /** "🇷🇺 06.10.2026": the flag goes in front of the date under the author. */
+    /** The original region flag stays in front of the exact local publication time. */
     private static String flagged(Object post,String date){
         if(date==null)return null;
         String flag=flag(region(post));
@@ -94,15 +94,7 @@ public final class Dates {
     }
 
     static String label(long seconds,long now) {
-        if (seconds>100000000000L) seconds/=1000L;
-        if (seconds<1000000000L || seconds>now+86400L) return null;
-        // a fresh video says how long ago; a week and older, the date
-        long ago=Math.max(0L,now-seconds);
-        if(ago<3600L)return Text.minutesAgo((int)Math.max(1L,ago/60L));
-        if(ago<86400L)return Text.hoursAgo((int)(ago/3600L));
-        if(ago<7L*86400L)return Text.daysAgo((int)(ago/86400L));
-        return new java.text.SimpleDateFormat("dd.MM.yyyy",java.util.Locale.getDefault())
-                .format(new java.util.Date(seconds*1000L));
+        return PublicationTime.label(seconds,now,java.util.Locale.getDefault(),java.util.TimeZone.getDefault());
     }
 
     private static SharedPreferences prefs() {
