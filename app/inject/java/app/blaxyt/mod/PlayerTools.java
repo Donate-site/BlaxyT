@@ -21,7 +21,7 @@ public final class PlayerTools {
    SponsorBlock.playing(next);
   }catch(Throwable error){Diary.note("default speed: "+error);}
  }
- static void accountChanged(){aid="";current=new WeakReference<Object>(null);cancelSmooth();}
+ static void accountChanged(){aid="";current=new WeakReference<Object>(null);cancelSmooth();Ambient.reload();}
  /**
   * Any playback event, not only a resume after a pause: a video that starts playing is known at
   * once, its player with it. Resumes alone left a video nobody had paused unknown.

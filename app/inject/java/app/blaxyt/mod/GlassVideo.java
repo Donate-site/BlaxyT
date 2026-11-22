@@ -25,11 +25,11 @@ public final class GlassVideo {
     public static void progress(Object owner,String id,long time){PlayerTools.heard(owner,id);event(owner,id,time,false);}
     public static void paused(Object owner,String id){
         if(Looper.myLooper()!=Looper.getMainLooper()){MAIN.post(()->paused(owner,id));return;}
-        if(controller.get()==owner && aid.equals(id)){playing=false;position=Long.MIN_VALUE;GlassBackdrop.videoChanged(false);}
+        if(controller.get()==owner && aid.equals(id)){playing=false;position=Long.MIN_VALUE;GlassBackdrop.videoChanged(false);Ambient.paused();}
     }
     /** Observe TikTok's existing listener; never replace it or consume its callbacks. */
     public static void frameUpdated(SurfaceTexture texture){
-        if(texture==null || !Design.frosted())return;
+        if(texture==null || (!Design.frosted()&&!Ambient.enabled()))return;
         if(Looper.myLooper()!=Looper.getMainLooper()){MAIN.post(()->frameUpdated(texture));return;}
         GlassBackdrop.textureUpdated(texture);
         View view=render.get();
@@ -37,11 +37,11 @@ public final class GlassVideo {
         if(!aid.equals(NativeRead.aid(NativeRead.get(controller.get(),"LLJJJIL"))))return;
         long stamp;try{stamp=texture.getTimestamp();}catch(RuntimeException released){return;}
         if(textureReady && stamp==textureStamp)return;
-        textureReady=true;textureStamp=stamp;GlassBackdrop.frameAvailable();
+        textureReady=true;textureStamp=stamp;GlassBackdrop.frameAvailable();Ambient.video(view,generation);
     }
     static boolean frameReady(View view){return !(view instanceof TextureView) || textureReady;}
     private static void event(Object owner,String id,long time,boolean force){
-        if(!Design.frosted())return;
+        if(!Design.frosted()&&!Ambient.enabled())return;
         if(Looper.myLooper()!=Looper.getMainLooper()){MAIN.post(()->event(owner,id,time,force));return;}
         long now=SystemClock.uptimeMillis();
         if(!force && controller.get()==owner && aid.equals(id) && position==time)return;
@@ -77,6 +77,7 @@ public final class GlassVideo {
         }
         position=time;lastEvent=now;playing=true;lastCheck=0;
         GlassBackdrop.videoChanged(changed);
+        Ambient.video(next,generation);
     }
     private static String type(Object value){return value==null?"none":value.getClass().getSimpleName();}
     private static View surfaceView(View view,int depth,int[] budget){

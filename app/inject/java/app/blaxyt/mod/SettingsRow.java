@@ -169,6 +169,7 @@ public final class SettingsRow implements Application.ActivityLifecycleCallbacks
 
     @Override
     public void onActivityPaused(Activity activity) {
+        Ambient.paused(activity);
         try { AppUpdates.paused(activity); } catch(Throwable ignored) {}
         try { VoiceComments.paused(activity); } catch(Throwable ignored) {}
         try { BadgeShop.paused(activity); } catch(Throwable ignored) {}
