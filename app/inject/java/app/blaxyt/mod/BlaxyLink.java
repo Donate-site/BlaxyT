@@ -114,7 +114,7 @@ final class BlaxyLink {
             String value=code();if(value.isEmpty()){Screen.say("Сначала получите ID.");return;}
             ClipboardManager copy=(ClipboardManager)activity.getSystemService(Context.CLIPBOARD_SERVICE);
             if(copy!=null)copy.setPrimaryClip(ClipData.newPlainText("ID blaxyT",value));Screen.say("ID скопирован");
-        }).keepOpen("Открыть бота · 15 Stars",()->{
+        }).keepOpen("Получить значок · 15 звёзд",()->{
             String value=code();if(value.isEmpty()){Screen.say("Сначала получите ID.");return;}
             try{activity.startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("https://t.me/BlaxyTagent?start="+value)));}catch(Exception ignored){Screen.say("Откройте @BlaxyTagent в Telegram.");}
         }).keepOpen("Обновить статус",()->{

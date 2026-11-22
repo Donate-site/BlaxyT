@@ -682,6 +682,8 @@ public class SettingsActivity extends Activity {
             column.addView(groupNavigation());
             column.addView(wrap(actionRow("info",Local.of("Быстрый старт"),Local.of("Познакомься с возможностями blaxyT"),() -> Tutorial.show(this))));
             LinearLayout channels=card();
+            channels.addView(linkRow("bolt", "Поддержать проект и получить значок", "15 звёзд · @BlaxyTagent", "https://t.me/BlaxyTagent"));
+            channels.addView(line());
             channels.addView(linkRow("send", "ТГК: @blaxyT", "Канал BlaxyT", "https://t.me/blaxyT"));
             channels.addView(line());
             channels.addView(linkRow("person", "Разработчик в TikTok", "@androidtexhhh", OWNER_TIKTOK));
@@ -1900,7 +1902,8 @@ public class SettingsActivity extends Activity {
     /** The badges anybody can still get, each with what it takes and the button that starts on it. */
     private void badgesToGet() {
         LinearLayout information = card();
-        information.addView(quiet("Заряд — 15 Stars без срока. Заряд разработчика выдаётся командой blaxyT."));
+        information.addView(linkRow("bolt", "Поддержать проект и получить значок", "15 звёзд · @BlaxyTagent", "https://t.me/BlaxyTagent"));
+        information.addView(quiet("Заряд — 15 звёзд без срока. Для выдачи привяжите профиль к боту. Заряд разработчика выдаётся командой blaxyT."));
         information.addView(button("Привязать профиль · Открыть бота",this::proveAccount));
         information.addView(quiet("@androidtexhhh — в команде разработки blaxyT"));
         Badges.start(this);
